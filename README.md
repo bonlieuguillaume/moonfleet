@@ -1,2 +1,2 @@
 # moonfleet
-Repository to leverage SAR data for maritime monitoring and detection of dark fleet and dark vessels shenanigans 
+Repository to leverage SAR data for maritime monitoring and detection of dark fleet and dark vessels shenanigans.
