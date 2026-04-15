@@ -1,3 +1,32 @@
+# --- MY GITIGNORE ---
+# --- PROJECT DATA ---
+# Large S1 imagery and processed images must not be versioned
+data/
+data_raw/
+outputs/
+
+# --- PYTHON & BYTES ---
+# Compiled files and caches (not needed for the code to run)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# --- JUPYTER NOTEBOOKS ---
+# Even with nbstripeout, temporary checkpoints can cause git conflicts
+.ipynb_checkpoints/
+
+# --- IDE (VS CODE) ---
+# Project-specific settings 
+.vscode/
+.history/
+
+# --- SYSTEM ---
+.DS_Store
+Thumbs.db
+
+
+# Automatic Github gitignore
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
