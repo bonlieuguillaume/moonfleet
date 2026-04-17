@@ -1,7 +1,6 @@
 # --- MY GITIGNORE ---
 # --- PROJECT DATA ---
 # Large S1 imagery and processed images must not be versioned
-data/
 data_raw/
 outputs/
 

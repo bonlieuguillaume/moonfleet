@@ -65,10 +65,10 @@ def run_snap_graph(gpt_path, graph_xml, input_file, output_file):
 # --- CONFIGURATION ---
 # Windows example: r"C:\Program Files\snap\bin\gpt.exe"
 # Linux example: "/usr/local/snap/bin/gpt"
-GPT_BIN = "path/to/snap/bin/gpt"
-GRAPH_XML = "my_processing_graph.xml"
-IN_FILE = "S1A_IW_GRDH_...SAFE"
-OUT_FILE = "result_product.dim"
+GPT_BIN = r"C:\Program Files\esa-snap\bin\gpt.exe"
+GRAPH_XML = r"C:\Users\guigu\Documents\pro_asus\moonfleet\moonfleet_graphs\CFAR.xml"
+IN_FILE = r"C:\Users\guigu\Documents\pro_asus\moonfleet\data_raw\suez\S1A_IW_GRDH_1SDV_20260107T233152_20260107T233217_062668_07DB60_04F7.zip"
+OUT_FILE = r"C:\Users\guigu\Documents\pro_asus\moonfleet\outputs\naive_2.dim"
 
 # Only run the code inside this block if this specific file executed directly
 # If you were to import this file into another script, the code inside that block would be ignored
