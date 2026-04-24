@@ -1,0 +1,11 @@
+name: moonfleet
+channels:
+  - conda-forge
+dependencies:
+  - geopandas=1.1.3
+  - ipykernel=7.2.0
+  - nbstripout=0.9.1
+  - pandas=3.0.2
+  - python=3.11
+
+
