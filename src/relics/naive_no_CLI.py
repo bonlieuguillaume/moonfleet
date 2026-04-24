@@ -1,7 +1,5 @@
 import subprocess
 import os
-import argparse
-import sys
 
 def run_snap_graph(gpt_path, graph_xml, input_file, output_file):
     """
@@ -61,44 +59,20 @@ def run_snap_graph(gpt_path, graph_xml, input_file, output_file):
 
     except subprocess.CalledProcessError as e:
         # Capture and display the Java/SNAP error logs
-        print(f"Error during graph execution:\n{e.stderr}", file=sys.stderr)
+        print(f"Error during graph execution:\n{e.stderr}")
         return None
 
-def main():
-    # Setup command line argument parsing
-    parser = argparse.ArgumentParser(
-        description="Run a SNAP GPT graph from the command line."
-    )
-
-    # Adding arguments
-    parser.add_argument(
-        "--gpt", 
-        default=r"C:\Program Files\esa-snap\bin\gpt.exe",
-        help="Path to the SNAP gpt executable"
-    )
-    parser.add_argument(
-        "--graph", 
-        required=True, 
-        help="Path to the .xml graph file"
-    )
-    parser.add_argument(
-        "--input", 
-        required=True, 
-        help="Path to the input satellite data"
-    )
-    parser.add_argument(
-        "--output", 
-        required=True, 
-        help="Path for the output file"
-    )
-
-    args = parser.parse_args()
-
-    # Execute the function with parsed arguments
-    run_snap_graph(args.gpt, args.graph, args.input, args.output)
+# --- CONFIGURATION ---
+# Windows example: r"C:\Program Files\snap\bin\gpt.exe"
+# Linux example: "/usr/local/snap/bin/gpt"
+GPT_BIN = r"C:\Program Files\esa-snap\bin\gpt.exe"
+GRAPH_XML = r"C:\Users\guigu\Documents\pro_asus\moonfleet\graphs\CFAR.xml"
+IN_FILE = r"C:\Users\guigu\Documents\pro_asus\moonfleet\data\data_raw\suez\S1A_IW_GRDH_1SDV_20260107T233152_20260107T233217_062668_07DB60_04F7.zip"
+OUT_FILE = r"C:\Users\guigu\Documents\pro_asus\moonfleet\outputs\naive_3.dim"
 
 # Only run the code inside this block if this specific file executed directly
 # If you were to import this file into another script, the code inside that block would be ignored
 # prevents from starting automatically just because you wanted to borrow a function from the file
+
 if __name__ == "__main__":
-    main()
+    run_snap_graph(GPT_BIN, GRAPH_XML, IN_FILE, OUT_FILE) 
