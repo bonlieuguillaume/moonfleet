@@ -7,5 +7,6 @@ dependencies:
   - nbstripout=0.9.1
   - pandas=3.0.2
   - python=3.11
+  - anthropic=0.97.0
 
 
