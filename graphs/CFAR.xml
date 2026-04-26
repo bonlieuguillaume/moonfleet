@@ -124,7 +124,7 @@
       <tiePointGrids/>
       <region>0,0,0,0</region>
       <referenceBand/>
-      <geoRegion>POLYGON ((-79.61997985839844 8.85941219329834, -79.46651458740234 8.85941219329834, -79.46651458740234 8.97198486328125, -79.61997985839844 8.97198486328125, -79.61997985839844 8.85941219329834, -79.61997985839844 8.85941219329834))</geoRegion>
+      <geoRegion>${aoi}</geoRegion>
       <subSamplingX>1</subSamplingX>
       <subSamplingY>1</subSamplingY>
       <fullSwath>false</fullSwath>

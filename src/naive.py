@@ -3,7 +3,7 @@ import os
 import argparse
 import sys
 
-def run_snap_graph(gpt_path, graph_xml, input_file, output_file):
+def run_snap_graph(gpt_path, graph_xml, input_file, aoi, output_file):
     """
     Executes a SNAP XML graph using the Graph Processing Tool (GPT).
 
@@ -24,7 +24,6 @@ def run_snap_graph(gpt_path, graph_xml, input_file, output_file):
     Raises:
         FileNotFoundError: If the gpt_path does not exist on the system.
     """
-    
     # Verify that the GPT executable exists
     if not os.path.exists(gpt_path):
         raise FileNotFoundError(f"GPT tool not found at: {gpt_path}")
@@ -39,23 +38,24 @@ def run_snap_graph(gpt_path, graph_xml, input_file, output_file):
         graph_xml,
         "-e",
         f"-Pinput={input_file}",
+        f"-Paoi={aoi}",
         f"-Poutput={output_file}"
     ]
 
     print(f"Starting processing: {os.path.basename(input_file)}")
-    
+   
     try:
         # Execute the process
         # check=True: Raises CalledProcessError if return code is non-zero
         # stdout: captures the normal messages SNAP prints (like "Processing 10%...")
         # stderr: captures error messages
         process = subprocess.run(
-            command, 
-            check=True, 
-            stdout=subprocess.PIPE, 
+            command,
+            check=True,
+            stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True
-        )   
+        )  
         print("Processing completed successfully.")
         return process.stdout
 
@@ -72,30 +72,35 @@ def main():
 
     # Adding arguments
     parser.add_argument(
-        "--gpt", 
+        "--gpt",
         default=r"C:\Program Files\esa-snap\bin\gpt.exe",
         help="Path to the SNAP gpt executable"
     )
     parser.add_argument(
-        "--graph", 
-        required=True, 
+        "--graph",
+        required=True,
         help="Path to the .xml graph file"
     )
     parser.add_argument(
-        "--input", 
-        required=True, 
+        "--input",
+        required=True,
         help="Path to the input satellite data"
     )
     parser.add_argument(
-        "--output", 
-        required=True, 
+        "--aoi",
+        required=True,
+        help="Area of interest as WKT geometry (e.g. POLYGON ((...)))"
+    )
+    parser.add_argument(
+        "--output",
+        required=True,
         help="Path for the output file"
     )
 
     args = parser.parse_args()
 
     # Execute the function with parsed arguments
-    run_snap_graph(args.gpt, args.graph, args.input, args.output)
+    run_snap_graph(args.gpt, args.graph, args.input, args.aoi, args.output)
 
 # Only run the code inside this block if this specific file executed directly
 # If you were to import this file into another script, the code inside that block would be ignored
