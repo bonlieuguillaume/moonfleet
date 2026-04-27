@@ -1,4 +1,3 @@
-# moonfleet
 # 🛰️ Moonfleet — Sentinel-1 SAR Ship Detection Pipeline
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
