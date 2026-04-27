@@ -15,7 +15,8 @@ from C-band radar data — all-weather, day and night.
 
 ![Ship detections over the Strait of Hormuz](assets/display/hormuz_display.png)
 
-*Sentinel-1C IW GRD — April 2026 — CFAR detection over the Strait of Hormuz*
+*Sentinel-1C IW GRD — April 20th 2026 — Example of CFAR detection over the Strait of Hormuz, off Saudi Arabia*
+*Nicer visuals incoming*
 
 ---
 
@@ -32,19 +33,25 @@ from C-band radar data — all-weather, day and night.
 
 ## Project Structure
 
+```
 moonfleet/
 ├── src/
+│   └── relics/               # Obsolete scripts  
 │   └── naive.py              # Main processing script
 ├── graphs/
 │   └── CFAR.xml              # SNAP GPT processing graph
+├── notebooks/                # Notebooks to handcraft new features  
 ├── scripts/
-│   └── generate_readme.py    # README auto-generation via Claude API
-├── assets/
-│   └── hormuz_detections.png # Result image for README
+│   └── generate_readme.py    # README auto-generation via Claude API (soon to be tested)
+├── assets/display/
+│   └── hormuz_display.png # Result image for README
 ├── outputs/                  # Processing outputs (gitignored)
 ├── data/                     # Raw Sentinel-1 data (gitignored)
-├── moonfleet.yml             # Conda environment
+├── moonfleet_env_light.yml   # Manually added librairies
+├── moonfleet_env_full.yml    # Full conda environment (with automatically added dependencies)
+├── .gitignore
 └── README.md
+```
 
 ---
 
@@ -55,13 +62,14 @@ moonfleet/
 git clone https://github.com/guigu/moonfleet.git
 cd moonfleet
 
-# Create and activate conda environment
-conda env create -f moonfleet.yml
+# Using conda/mamba: create and activate conda environment (other solutions possible)
+conda env create -f moonfleet_env_light.yml
 conda activate moonfleet
 ```
 
 **Requirements:**
 - [ESA SNAP 13](https://step.esa.int/main/download/snap-download/) installed on your system
+- Ability to create a clean virtual environment 
 - Sentinel-1 GRD data (`.zip` or `.SAFE`)
 
 ---
@@ -72,8 +80,8 @@ conda activate moonfleet
 python src/naive.py \
   --graph graphs/CFAR.xml \
   --input path/to/S1A_IW_GRDH_1SDV_...zip \
-  --output outputs/result.dim \
-  --aoi "POLYGON((55.886573 26.104849,54.503174 25.85428,54.637756 25.269536,56.063721 25.56760,55.886573 26.104849))"
+  --aoi "POLYGON((55.886573 26.104849,54.503174 25.85428,54.637756 25.269536,56.063721 25.56760,55.886573 26.104849))"\
+  --output outputs/result.dim 
 ```
 
 ### Arguments
@@ -103,9 +111,9 @@ Complete Sentinel-1 GRD processing chain for maritime ship detection:
 | 5 | Speckle-Filter | Lee Sigma speckle reduction (3×3) |
 | 6 | Terrain-Correction | Geometric correction using Copernicus 30m DEM |
 | 7 | Subset | Crop to AOI using WKT polygon |
-| 8 | Land-Sea-Mask | Mask land pixels using SRTM |
-| 9 | AdaptiveThresholding | CFAR detection (PFA=6.5) |
-| 10 | Object-Discrimination | Filter detections by size (30m–500m) |
+| 8 | Land-Sea-Mask | Mask land pixels |
+| 9 | AdaptiveThresholding | CFAR detection |
+| 10 | Object-Discrimination | Filter detections by size |
 | 11 | Write | Export to BEAM-DIMAP format |
 
 ---
@@ -117,8 +125,7 @@ The pipeline produces a **BEAM-DIMAP** product (`.dim` + `.data/` folder) contai
 - `Gamma0_VH` — calibrated VH backscatter band
 - `Gamma0_VV` — calibrated VV backscatter band  
 - `Gamma0_VH_ship_bit_msk` — binary ship detection mask
-- Object Detection Report XML in `~/.snap/var/log/`
-
+- Object Detection Report XML in `~/.snap/var/log/` (soon to be converted in CSV format and post-processed properly)
 ---
 
 ## Dependencies
@@ -127,7 +134,6 @@ The pipeline produces a **BEAM-DIMAP** product (`.dim` + `.data/` folder) contai
 |---|---|---|
 | Python | 3.11 | Runtime |
 | ESA SNAP | 13 | SAR processing engine |
-| anthropic | latest | README generation via Claude API |
 
 ---
 
