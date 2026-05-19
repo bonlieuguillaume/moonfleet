@@ -32,11 +32,15 @@ def run_snap_graph(gpt_path, graph_xml, input_file, output_file):
     # Use a list instead of a single string because it's safer
     # It prevents "command injection" and handles spaces in file paths automatically
     # -e: Provides detailed error stack traces
+    # -c: Tile cache: GPT CLI doesn't read the snap.conf, so we set it here to avoid "Out of Memory" errors
+    # -q: Number of threads: GPT CLI doesn't read the snap.conf, so we set it here to speed up processing on multi-core machines
     # -Pname=value: Sets a processing parameter (referenced as ${name} in the XML)
     command = [
         gpt_path,
         graph_xml,
         "-e",
+        "-c", "16384M",  
+        "-q", "16",     
         f"-Pinput={input_file}",
         f"-Poutput={output_file}"
     ]
