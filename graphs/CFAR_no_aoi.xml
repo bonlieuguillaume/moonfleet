@@ -1,5 +1,3 @@
-<!-- for the sake of execution, the input and output files are {input_file} and {output_file} -->
-
 <graph id="Graph">
   <version>1.0</version>
   <node id="Read">
@@ -114,25 +112,6 @@
       <externalAuxFile/>
     </parameters>
   </node>
-  <node id="Subset">
-    <operator>Subset</operator>
-    <sources>
-      <sourceProduct refid="Terrain-Correction"/>
-    </sources>
-    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <sourceBands/>
-      <tiePointGrids/>
-      <region>0,0,0,0</region>
-      <referenceBand/>
-      <geoRegion>${aoi}</geoRegion>
-      <subSamplingX>1</subSamplingX>
-      <subSamplingY>1</subSamplingY>
-      <fullSwath>false</fullSwath>
-      <vectorFile/>
-      <polygonRegion/>
-      <copyMetadata>true</copyMetadata>
-    </parameters>
-  </node>
   <node id="AdaptiveThresholding">
     <operator>AdaptiveThresholding</operator>
     <sources>
@@ -159,14 +138,12 @@
   <node id="Land-Sea-Mask">
     <operator>Land-Sea-Mask</operator>
     <sources>
-      <sourceProduct refid="Subset"/>
+      <sourceProduct refid="Terrain-Correction"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <sourceBands/>
       <landMask>true</landMask>
-      <useSRTM>true</useSRTM>
-      <geometry/>
       <invertGeometry>false</invertGeometry>
+      <useSRTM>true</useSRTM>
       <shorelineExtension>0</shorelineExtension>
     </parameters>
   </node>
@@ -199,10 +176,7 @@
       <displayPosition x="415.0" y="37.0"/>
     </node>
     <node id="Terrain-Correction">
-      <displayPosition x="517.0" y="37.0"/>
-    </node>
-    <node id="Subset">
-      <displayPosition x="506.0" y="94.0"/>
+      <displayPosition x="496.0" y="71.0"/>
     </node>
     <node id="AdaptiveThresholding">
       <displayPosition x="242.0" y="94.0"/>
