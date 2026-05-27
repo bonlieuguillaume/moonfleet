@@ -504,12 +504,14 @@
 let DETECTIONS_DATA = null;
 let detections = [];
 
+// Fetches a JSON report from outputs/detections/ and re-renders the full UI.
+// Called on startup by populateReportSelector() and on dropdown change via loadReport().
 async function loadDetections(filename = 'detections.json') {
   const statusEl = document.getElementById('load-status');
   document.getElementById('load-overlay').style.display = 'flex';
   try {
     statusEl.textContent = `Loading ${filename}…`;
-    const res = await fetch(`outputs/detections/${filename}`);
+    const res = await fetch(`/outputs/detections/${filename}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     DETECTIONS_DATA = await res.json();
     detections = DETECTIONS_DATA.detections;
@@ -539,7 +541,7 @@ async function loadDetections(filename = 'detections.json') {
     buildMarkers();
     buildList();
   } catch(e) {
-    statusEl.innerHTML = `<span style="color:#f87171">Error: ${e.message}<br>Make sure outputs/detections/${filename} exists and the server is running.</span>`;
+    statusEl.innerHTML = `<span style="color:#f87171">Error: ${e.message}<br>Make sure /outputs/detections/${filename} exists and the server is running.</span>`;
     console.error(e);
   }
 }
@@ -763,19 +765,25 @@ function highlightListItem(idx) {
 }
 
 // ─── REPORT SELECTOR ─────────────────────────────────────────────
+
+// Triggered by the dropdown — reloads everything with the chosen report.
 function loadReport(filename) {
   loadDetections(filename);
 }
 
+// Populates the report dropdown by fetching the outputs/detections/ directory listing.
+// Python's SimpleHTTPRequestHandler returns an HTML page listing all files — we parse
+// it to extract .json filenames without needing a dedicated backend endpoint.
+// Falls back to a single "detections" option if the directory fetch fails.
 async function populateReportSelector() {
   const sel = document.getElementById('report-select');
   try {
-    const res = await fetch('outputs/detections/');
+    const res = await fetch('/outputs/detections/');
     const html = await res.text();
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const files = [...doc.querySelectorAll('a[href]')]
       .map(a => a.getAttribute('href'))
-      .filter(h => h.endsWith('.json') && !h.includes('/'));
+      .filter(h => h.endsWith('.json') && !h.includes('/'));  // exclude parent dir link
     if (files.length === 0) files.push('detections.json');
     files.forEach(f => {
       const opt = document.createElement('option');
@@ -785,6 +793,7 @@ async function populateReportSelector() {
       sel.appendChild(opt);
     });
   } catch(e) {
+    // Fallback: if directory listing fails, offer only the default report.
     const opt = document.createElement('option');
     opt.value = 'detections.json';
     opt.textContent = 'detections';

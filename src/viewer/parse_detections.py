@@ -8,15 +8,24 @@ from datetime import datetime
 """
 parse_detections.py
 -------------------
-Parses a SNAP Object Detection Report XML and outputs a detections.json
+Parses a SNAP Object Detection Report XML and outputs a JSON file
 ready to be consumed by viewer.html.
 
+SNAP writes its object detection XML report to:
+  C:\\Users\\<user>\\.snap\\var\\log\\<scene_name>.xml
+
+Output is always written to outputs/detections/ at the project root.
+Without --output, overwrites outputs/detections/detections.json.
+With --output <stem>, writes outputs/detections/<stem>.json.
+
 Usage:
-    python parse_detections.py <path_to_xml> [--output detections.json]
+    python parse_detections.py <path_to_xml>
+    python parse_detections.py <path_to_xml> --output <stem>
 
 Example:
-    python parse_detections.py "C:\\Users\\guigu\\.snap\\var\\log\\...xml"
-    python parse_detections.py report.xml --output data/detections.json
+    python parse_detections.py "C:\\Users\\guigu\\.snap\\var\\log\\S1A_IW_GRDH_...xml"
+    python parse_detections.py report.xml --output s1a_20260107
+    # → outputs/detections/s1a_20260107.json
 """
 
 
@@ -64,6 +73,18 @@ def classify_vessel(length_m: float) -> str:
 
 
 def parse_detection_xml(xml_path: str) -> dict:
+    """
+    Parse a SNAP Object Detection Report XML into a structured dict.
+
+    SNAP reports Detected_width and Detected_length relative to the detection
+    bounding box orientation, not the vessel's physical axis — so which is the
+    long dimension varies by detection. We normalize: length = max, width = min.
+
+    Returns a dict with three keys:
+      - metadata:   acquisition info extracted from the filename
+      - stats:      aggregate counts, length range, bounding box, class breakdown
+      - detections: list of individual target dicts
+    """
     tree = ET.parse(xml_path)
     root = tree.getroot()
 
@@ -125,6 +146,8 @@ def main():
         print(f"Error: file not found: {args.xml}", file=sys.stderr)
         sys.exit(1)
 
+    # Always resolve output relative to the project root, regardless of where
+    # the script is called from. stem is the filename without extension.
     script_dir = os.path.dirname(os.path.abspath(__file__))
     root_dir = os.path.abspath(os.path.join(script_dir, "..", ".."))
     stem = args.output if args.output else "detections"
