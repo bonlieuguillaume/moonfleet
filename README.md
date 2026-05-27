@@ -14,7 +14,7 @@ from C-band radar data — all-weather, day and night.
 
 ![Ship detections over the Strait of Hormuz](assets/display/hormuz_display.png)
 
-*Sentinel-1C IW GRD — April 20th 2026 — Example of CFAR detection over the Strait of Hormuz, off Saudi Arabia*
+*Sentinel-1A IW GRD — May 25th 2026 — Example of CFAR detection over the Strait of Hormuz*
 
 *Nicer visuals incoming...*
 
