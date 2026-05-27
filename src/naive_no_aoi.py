@@ -50,8 +50,8 @@ def run_snap_graph(gpt_path, graph_xml, input_file, output_file):
     try:
         # Execute the process
         # check=True: Raises CalledProcessError if return code is non-zero
-        # stdout: captures the normal messages SNAP prints (like "Processing 10%...")
-        # stderr: captures error messages
+        # stdout: if not commented out, captures the normal messages SNAP prints (like "Processing 10%...")
+        # stderr: if not commented out, captures error messages
         process = subprocess.run(
             command,
             check=True,
@@ -91,8 +91,8 @@ def main():
     )
     parser.add_argument(
         "--output",
-        required=True,
-        help="Path for the output file"
+        default="detections.dim",
+        help="Path for the output file (default: detections.dim)"
     )
 
     args = parser.parse_args()

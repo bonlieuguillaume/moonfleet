@@ -98,8 +98,8 @@ def main():
     )
     parser.add_argument(
         "--output",
-        required=True,
-        help="Path for the output file"
+        default="detections.dim",
+        help="Path for the output file (default: detections.dim)"
     )
 
     args = parser.parse_args()

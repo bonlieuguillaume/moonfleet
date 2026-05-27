@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moonfleet — Maritime Detection Viewer</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --panel: #111827;
+    --panel-border: #1e2d45;
+    --accent: #00d4ff;
+    --accent2: #ff6b35;
+    --text: #e2e8f0;
+    --text-dim: #64748b;
+    --small:   #4ade80;
+    --medium:  #facc15;
+    --large:   #fb923c;
+    --vlarge:  #f87171;
+    --scan-line: rgba(0,212,255,0.03);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* SCAN LINE EFFECT */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      var(--scan-line) 2px, var(--scan-line) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--panel-border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1000;
+  }
+
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .logo span { color: var(--text-dim); font-weight: 400; }
+
+  .meta-pill {
+    background: rgba(0,212,255,0.08);
+    border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 16px;
+    margin-left: auto;
+  }
+  .header-stat {
+    text-align: right;
+  }
+  .header-stat .val {
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .header-stat .lbl {
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .report-select {
+    background: rgba(0,212,255,0.06);
+    border: 1px solid rgba(0,212,255,0.25);
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--accent);
+    cursor: pointer;
+    outline: none;
+    max-width: 220px;
+  }
+  .report-select option {
+    background: var(--panel);
+    color: var(--text);
+  }
+
+  /* MAIN LAYOUT */
+  .main { display: flex; flex: 1; overflow: hidden; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 280px;
+    background: var(--panel);
+    border-right: 1px solid var(--panel-border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .sidebar-section {
+    padding: 16px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+  .section-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  /* CLASS BREAKDOWN */
+  .class-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .class-row:hover { background: rgba(255,255,255,0.04); }
+  .class-row.hidden { opacity: 0.4; }
+
+  .class-left { display: flex; align-items: center; gap: 8px; }
+  .class-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .class-name { font-size: 0.8rem; }
+  .class-range { font-size: 0.68rem; color: var(--text-dim); }
+
+  .class-count {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .class-bar-wrap { margin-top: 2px; }
+  .class-bar { height: 3px; background: var(--panel-border); border-radius: 2px; overflow: hidden; }
+  .class-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+
+  /* BASEMAP SWITCHER */
+  .basemap-btns { display: flex; gap: 8px; }
+  .basemap-btn {
+    flex: 1;
+    padding: 6px 4px;
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    font-size: 0.68rem;
+    font-family: 'Space Mono', monospace;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .basemap-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .basemap-btn.active { background: rgba(0,212,255,0.1); border-color: var(--accent); color: var(--accent); }
+
+  /* OPACITY SLIDER */
+  .slider-wrap { display: flex; align-items: center; gap: 10px; }
+  .slider-wrap label { font-size: 0.72rem; color: var(--text-dim); white-space: nowrap; }
+  input[type=range] {
+    flex: 1;
+    accent-color: var(--accent);
+    height: 3px;
+  }
+  .slider-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--accent);
+    width: 30px;
+    text-align: right;
+  }
+
+  /* DETECTIONS LIST */
+  .det-list-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 0 8px 0;
+  }
+  .det-list-wrap::-webkit-scrollbar { width: 4px; }
+  .det-list-wrap::-webkit-scrollbar-track { background: transparent; }
+  .det-list-wrap::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+
+  .det-list-header {
+    padding: 10px 16px 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    position: sticky;
+    top: 0;
+    background: var(--panel);
+    border-bottom: 1px solid var(--panel-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+  }
+
+  .det-list-header span { font-weight: 400; color: var(--text-dim); }
+
+  .det-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 16px;
+    cursor: pointer;
+    transition: background 0.12s;
+    border-bottom: 1px solid rgba(30,45,69,0.5);
+  }
+  .det-item:hover { background: rgba(255,255,255,0.04); }
+  .det-item.active { background: rgba(0,212,255,0.08); }
+
+  .det-icon {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .det-body { flex: 1; min-width: 0; }
+  .det-size { font-size: 0.78rem; font-weight: 500; }
+  .det-coords {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .det-len {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  /* MAP */
+  #map {
+    flex: 1;
+    background: #060d1a;
+  }
+
+  /* POPUP */
+  .leaflet-popup-content-wrapper {
+    background: var(--panel) !important;
+    border: 1px solid var(--panel-border) !important;
+    border-radius: 6px !important;
+    color: var(--text) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+  }
+  .leaflet-popup-tip { background: var(--panel) !important; }
+  .leaflet-popup-close-button { color: var(--text-dim) !important; }
+
+  .popup-header {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .popup-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    margin-bottom: 4px;
+  }
+  .popup-row .pk { color: var(--text-dim); }
+  .popup-row .pv {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+  }
+
+  /* STATUS BAR */
+  .statusbar {
+    background: var(--panel);
+    border-top: 1px solid var(--panel-border);
+    padding: 5px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .statusbar .sep { opacity: 0.3; }
+  #coords-display { color: var(--accent); min-width: 200px; }
+
+  /* Cluster customization */
+  .marker-cluster-small div,
+  .marker-cluster-medium div,
+  .marker-cluster-large div {
+    background-color: rgba(0, 212, 255, 0.25) !important;
+    color: var(--accent) !important;
+    font-family: 'Space Mono', monospace !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+  }
+  .marker-cluster-small,
+  .marker-cluster-medium,
+  .marker-cluster-large {
+    background-color: rgba(0, 212, 255, 0.1) !important;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">MOONFLEET<span> // Maritime SAR</span></div>
+  <div class="meta-pill" id="sat-pill">S1A · IW · GRDH</div>
+  <div class="meta-pill" id="time-pill">2026-01-07 · 23:31 UTC</div>
+  <div class="meta-pill" id="orbit-pill">ORB #62668</div>
+  <select id="report-select" class="report-select" onchange="loadReport(this.value)"></select>
+  <div class="header-stats">
+    <div class="header-stat">
+      <div class="val" id="total-count">911</div>
+      <div class="lbl">Detections</div>
+    </div>
+    <div class="header-stat">
+      <div class="val">CFAR</div>
+      <div class="lbl">Method</div>
+    </div>
+    <div class="header-stat">
+      <div class="val">10m</div>
+      <div class="lbl">Resolution</div>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+  <div class="sidebar">
+    <!-- CLASS FILTER -->
+    <div class="sidebar-section">
+      <div class="section-title">Vessel Classes</div>
+
+      <div class="class-row" data-class="small" onclick="toggleClass('small')">
+        <div class="class-left">
+          <div class="class-dot" style="background:#4ade80"></div>
+          <div>
+            <div class="class-name">Small</div>
+            <div class="class-range">&lt; 50 m</div>
+          </div>
+        </div>
+        <div>
+          <div class="class-count" style="color:#4ade80" id="cnt-small">251</div>
+          <div class="class-bar-wrap"><div class="class-bar"><div class="class-bar-fill" style="background:#4ade80; width:27%"></div></div></div>
+        </div>
+      </div>
+
+      <div class="class-row" data-class="medium" onclick="toggleClass('medium')">
+        <div class="class-left">
+          <div class="class-dot" style="background:#facc15"></div>
+          <div>
+            <div class="class-name">Medium</div>
+            <div class="class-range">50 – 150 m</div>
+          </div>
+        </div>
+        <div>
+          <div class="class-count" style="color:#facc15" id="cnt-medium">423</div>
+          <div class="class-bar-wrap"><div class="class-bar"><div class="class-bar-fill" style="background:#facc15; width:46%"></div></div></div>
+        </div>
+      </div>
+
+      <div class="class-row" data-class="large" onclick="toggleClass('large')">
+        <div class="class-left">
+          <div class="class-dot" style="background:#fb923c"></div>
+          <div>
+            <div class="class-name">Large</div>
+            <div class="class-range">150 – 250 m</div>
+          </div>
+        </div>
+        <div>
+          <div class="class-count" style="color:#fb923c" id="cnt-large">135</div>
+          <div class="class-bar-wrap"><div class="class-bar"><div class="class-bar-fill" style="background:#fb923c; width:15%"></div></div></div>
+        </div>
+      </div>
+
+      <div class="class-row" data-class="very_large" onclick="toggleClass('very_large')">
+        <div class="class-left">
+          <div class="class-dot" style="background:#f87171"></div>
+          <div>
+            <div class="class-name">Very Large</div>
+            <div class="class-range">&gt; 250 m</div>
+          </div>
+        </div>
+        <div>
+          <div class="class-count" style="color:#f87171" id="cnt-vlarge">102</div>
+          <div class="class-bar-wrap"><div class="class-bar"><div class="class-bar-fill" style="background:#f87171; width:11%"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BASEMAP -->
+    <div class="sidebar-section">
+      <div class="section-title">Basemap</div>
+      <div class="basemap-btns">
+        <button class="basemap-btn active" onclick="setBasemap('dark')">Dark</button>
+        <button class="basemap-btn" onclick="setBasemap('satellite')">SAT</button>
+        <button class="basemap-btn" onclick="setBasemap('osm')">OSM</button>
+      </div>
+    </div>
+
+    <!-- MARKER SIZE -->
+    <div class="sidebar-section">
+      <div class="section-title">Marker Size</div>
+      <div class="slider-wrap">
+        <label>Size</label>
+        <input type="range" min="4" max="20" value="8" id="size-slider" oninput="updateMarkerSize(this.value)">
+        <span class="slider-val" id="size-val">8</span>
+      </div>
+    </div>
+
+    <!-- DETECTIONS LIST -->
+    <div class="det-list-header">
+      Detections <span id="list-count">911 shown</span>
+    </div>
+    <div class="det-list-wrap" id="det-list"></div>
+  </div>
+
+  
+  <!-- LOADING OVERLAY -->
+  <div id="load-overlay" style="
+    position:fixed;inset:0;
+    background:rgba(10,14,26,0.92);
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    z-index:99999;
+    font-family:'Space Mono',monospace;
+  ">
+    <div style="color:#00d4ff;font-size:1.1rem;font-weight:700;letter-spacing:0.15em;margin-bottom:16px;">
+      MOONFLEET
+    </div>
+    <div id="load-status" style="color:#64748b;font-size:0.75rem;"></div>
+  </div>
+
+<div id="map"></div>
+</div>
+
+<div class="statusbar">
+  <span id="coords-display">Move cursor over map</span>
+  <span class="sep">|</span>
+  <span>WGS84</span>
+  <span class="sep">|</span>
+  <span>© ESA Copernicus · Sentinel-1C</span>
+  <span class="sep">|</span>
+  <span>Moonfleet v0.1</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<script>
+// ─── DATA ────────────────────────────────────────────────────────
+let DETECTIONS_DATA = null;
+let detections = [];
+
+async function loadDetections(filename = 'detections.json') {
+  const statusEl = document.getElementById('load-status');
+  document.getElementById('load-overlay').style.display = 'flex';
+  try {
+    statusEl.textContent = `Loading ${filename}…`;
+    const res = await fetch(`outputs/detections/${filename}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    DETECTIONS_DATA = await res.json();
+    detections = DETECTIONS_DATA.detections;
+
+    // Update header
+    const m = DETECTIONS_DATA.metadata;
+    const s = DETECTIONS_DATA.stats;
+    if (m.satellite) document.getElementById('sat-pill').textContent = `${m.satellite} · ${m.mode} · ${m.product_type}`;
+    if (m.start_time) document.getElementById('time-pill').textContent = m.start_time.replace(' UTC','') + ' UTC';
+    if (m.orbit)      document.getElementById('orbit-pill').textContent = `ORB #${m.orbit}`;
+    document.getElementById('total-count').textContent = s.total_detections;
+
+    // Update class counts
+    document.getElementById('cnt-small').textContent  = s.by_class.small;
+    document.getElementById('cnt-medium').textContent = s.by_class.medium;
+    document.getElementById('cnt-large').textContent  = s.by_class.large;
+    document.getElementById('cnt-vlarge').textContent = s.by_class.very_large;
+
+    // Update bar widths
+    const total = s.total_detections;
+    const bars = document.querySelectorAll('.class-bar-fill');
+    const vals = [s.by_class.small, s.by_class.medium, s.by_class.large, s.by_class.very_large];
+    bars.forEach((b,i) => b.style.width = Math.round(vals[i]/total*100) + '%');
+
+    document.getElementById('load-overlay').style.display = 'none';
+    statusEl.textContent = '';
+    buildMarkers();
+    buildList();
+  } catch(e) {
+    statusEl.innerHTML = `<span style="color:#f87171">Error: ${e.message}<br>Make sure outputs/detections/${filename} exists and the server is running.</span>`;
+    console.error(e);
+  }
+}
+
+
+// ─── CONFIG ──────────────────────────────────────────────────────
+const CLASS_COLORS = {
+  small:      '#4ade80',
+  medium:     '#facc15',
+  large:      '#fb923c',
+  very_large: '#f87171'
+};
+const CLASS_LABELS = {
+  small:      'Small',
+  medium:     'Medium',
+  large:      'Large',
+  very_large: 'Very Large'
+};
+
+const BASEMAPS = {
+  dark:      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  osm:       'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+};
+
+// ─── STATE ───────────────────────────────────────────────────────
+let markerSize = 8;
+let hiddenClasses = new Set();
+let activeMarker = null;
+let markerLayers = {}; // class -> L.MarkerClusterGroup
+let currentBasemap = null;
+let currentBasemapKey = 'dark';
+let allMarkers = {}; // index -> L.circleMarker
+
+// ─── MAP INIT ────────────────────────────────────────────────────
+const map = L.map('map', {
+  center: [9.38, -79.5],
+  zoom: 8,
+  zoomControl: true,
+  preferCanvas: true
+});
+
+// Basemap
+function setBasemap(key) {
+  if (currentBasemap) map.removeLayer(currentBasemap);
+  currentBasemap = L.tileLayer(BASEMAPS[key], {
+    attribution: '',
+    maxZoom: 19,
+    subdomains: key === 'satellite' ? '' : 'abcd'
+  }).addTo(map);
+  currentBasemapKey = key;
+  document.querySelectorAll('.basemap-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase() === key || 
+      (key === 'satellite' && b.textContent === 'SAT') ||
+      (key === 'osm' && b.textContent === 'OSM') ||
+      (key === 'dark' && b.textContent === 'Dark'));
+  });
+}
+setBasemap('dark');
+
+// Coordinate display
+map.on('mousemove', e => {
+  document.getElementById('coords-display').textContent =
+    `${e.latlng.lat.toFixed(5)}°N  ${e.latlng.lng.toFixed(5)}°E`;
+});
+
+// ─── MARKER CREATION ─────────────────────────────────────────────
+function makeIcon(d, size) {
+  const color = CLASS_COLORS[d.vessel_class];
+  return L.circleMarker([d.lat, d.lon], {
+    radius: Math.max(3, size * 0.5 + d.length_m / 60),
+    fillColor: color,
+    fillOpacity: 0.75,
+    color: color,
+    weight: 1,
+    opacity: 0.9
+  });
+}
+
+function makePopup(d, idx) {
+  const cls = CLASS_LABELS[d.vessel_class];
+  const color = CLASS_COLORS[d.vessel_class];
+  return `
+    <div>
+      <div class="popup-header" style="color:${color}">
+        ⬡ Detection #${idx + 1} &mdash; ${cls}
+      </div>
+      <div class="popup-row"><span class="pk">Latitude</span><span class="pv">${d.lat.toFixed(5)}°</span></div>
+      <div class="popup-row"><span class="pk">Longitude</span><span class="pv">${d.lon.toFixed(5)}°</span></div>
+      <div class="popup-row"><span class="pk">Length</span><span class="pv">${d.length_m} m</span></div>
+      <div class="popup-row"><span class="pk">Width</span><span class="pv">${d.width_m} m</span></div>
+      <div class="popup-row"><span class="pk">Class</span><span class="pv" style="color:${color}">${cls.toUpperCase()}</span></div>
+    </div>`;
+}
+
+// ─── RENDER MARKERS ──────────────────────────────────────────────
+function buildMarkers() {
+  // Clear existing
+  Object.values(markerLayers).forEach(l => map.removeLayer(l));
+  markerLayers = {};
+  allMarkers = {};
+
+  // Build cluster groups per class
+  const classes = ['small','medium','large','very_large'];
+  classes.forEach(cls => {
+    markerLayers[cls] = L.markerClusterGroup({
+      maxClusterRadius: 40,
+      disableClusteringAtZoom: 11,
+      spiderfyOnMaxZoom: true,
+      showCoverageOnHover: false,
+      iconCreateFunction: function(cluster) {
+        const n = cluster.getChildCount();
+        const color = CLASS_COLORS[cls];
+        return L.divIcon({
+          html: `<div style="
+            background:${color}22;
+            border:1px solid ${color}88;
+            border-radius:50%;
+            width:36px;height:36px;
+            display:flex;align-items:center;justify-content:center;
+            font-family:'Space Mono',monospace;
+            font-size:0.65rem;font-weight:700;
+            color:${color};
+          ">${n}</div>`,
+          className: '',
+          iconSize: [36, 36]
+        });
+      }
+    });
+  });
+
+  detections.forEach((d, i) => {
+    const m = makeIcon(d, markerSize);
+    m.bindPopup(makePopup(d, i), { maxWidth: 240, className: '' });
+    m.on('click', () => highlightListItem(i));
+    markerLayers[d.vessel_class].addLayer(m);
+    allMarkers[i] = m;
+  });
+
+  classes.forEach(cls => {
+    if (!hiddenClasses.has(cls)) {
+      map.addLayer(markerLayers[cls]);
+    }
+  });
+}
+
+// ─── CLASS TOGGLE ────────────────────────────────────────────────
+function toggleClass(cls) {
+  if (hiddenClasses.has(cls)) {
+    hiddenClasses.delete(cls);
+    map.addLayer(markerLayers[cls]);
+  } else {
+    hiddenClasses.add(cls);
+    map.removeLayer(markerLayers[cls]);
+  }
+  document.querySelector(`[data-class="${cls}"]`).classList.toggle('hidden', hiddenClasses.has(cls));
+  updateListCount();
+}
+
+function updateListCount() {
+  const shown = detections.filter(d => !hiddenClasses.has(d.vessel_class)).length;
+  document.getElementById('list-count').textContent = `${shown} shown`;
+}
+
+// ─── MARKER SIZE ─────────────────────────────────────────────────
+function updateMarkerSize(val) {
+  markerSize = parseInt(val);
+  document.getElementById('size-val').textContent = val;
+  buildMarkers();
+}
+
+// ─── SIDEBAR LIST ────────────────────────────────────────────────
+function buildList() {
+  const list = document.getElementById('det-list');
+  list.innerHTML = '';
+
+  // Show top 200 for perf; full list would be 911 DOM nodes
+  const shown = detections.slice(0, 911);
+  shown.forEach((d, i) => {
+    const color = CLASS_COLORS[d.vessel_class];
+    const div = document.createElement('div');
+    div.className = 'det-item';
+    div.id = `det-item-${i}`;
+    div.innerHTML = `
+      <div class="det-icon" style="background:${color}"></div>
+      <div class="det-body">
+        <div class="det-size">${CLASS_LABELS[d.vessel_class]}</div>
+        <div class="det-coords">${d.lat.toFixed(4)}, ${d.lon.toFixed(4)}</div>
+      </div>
+      <div class="det-len">${d.length_m}m</div>`;
+    div.onclick = () => flyTo(i);
+    list.appendChild(div);
+  });
+}
+
+function flyTo(idx) {
+  const d = detections[idx];
+  map.flyTo([d.lat, d.lon], 13, { duration: 0.8 });
+  setTimeout(() => {
+    const m = allMarkers[idx];
+    if (m) {
+      if (markerLayers[d.vessel_class]) {
+        markerLayers[d.vessel_class].zoomToShowLayer(m, () => m.openPopup());
+      }
+    }
+  }, 900);
+  highlightListItem(idx);
+}
+
+function highlightListItem(idx) {
+  if (activeMarker !== null) {
+    const prev = document.getElementById(`det-item-${activeMarker}`);
+    if (prev) prev.classList.remove('active');
+  }
+  activeMarker = idx;
+  const el = document.getElementById(`det-item-${idx}`);
+  if (el) {
+    el.classList.add('active');
+    el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+}
+
+// ─── REPORT SELECTOR ─────────────────────────────────────────────
+function loadReport(filename) {
+  loadDetections(filename);
+}
+
+async function populateReportSelector() {
+  const sel = document.getElementById('report-select');
+  try {
+    const res = await fetch('outputs/detections/');
+    const html = await res.text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const files = [...doc.querySelectorAll('a[href]')]
+      .map(a => a.getAttribute('href'))
+      .filter(h => h.endsWith('.json') && !h.includes('/'));
+    if (files.length === 0) files.push('detections.json');
+    files.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f;
+      opt.textContent = f.replace('.json', '');
+      if (f === 'detections.json') opt.selected = true;
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    const opt = document.createElement('option');
+    opt.value = 'detections.json';
+    opt.textContent = 'detections';
+    sel.appendChild(opt);
+  }
+  loadDetections(sel.value);
+}
+
+// ─── INIT ────────────────────────────────────────────────────────
+populateReportSelector();
+</script>
+</body>
+</html>
