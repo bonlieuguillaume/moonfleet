@@ -12,16 +12,16 @@ Moonfleet is an end-to-end vessel detection pipeline built on **Sentinel-1 SAR**
 
 ## Screenshots
 
-![Viewer overview](data/data_raw/hormuz/displays/viewer-overview.png)
+![Viewer overview](data/data_raw/hormuz/display/viewer-overview.png)
 *The Moonfleet viewer — dark maritime theme, detection markers, and run metadata at a glance.*
 
-![Detections cluster over the Strait of Hormuz](data/data_raw/hormuz/displays/hormuz-detections-cluster.png)
+![Detections cluster over the Strait of Hormuz](data/data_raw/hormuz/display/hormuz-detections-cluster.png)
 *A dense cluster of vessel detections over the Strait of Hormuz, with the tile footprint overlaid in cyan.*
 
-![Custom vessel class panel](data/data_raw/hormuz/displays/custom-class-panel.png)
+![Custom vessel class panel](data/data_raw/hormuz/display/custom-class-panel.png)
 *Define your own vessel classes with per-class length and width intervals — fully editable from the UI.*
 
-![CFAR detection zoom](data/data_raw/hormuz/displays/cfar-result-zoom.png)
+![CFAR detection zoom](data/data_raw/hormuz/display/cfar-result-zoom.png)
 *Zoomed-in view of CFAR detections — each marker shows length, width and inferred class.*
 
 ## Key features
