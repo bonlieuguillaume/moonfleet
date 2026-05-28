@@ -87,7 +87,7 @@ Include these sections in this exact order:
 
 4. **Screenshots / Results** — this is the centrepiece.
    Include 4 Markdown image references. Use paths of the form:
-     `data/data_raw/hormuz/display/<your_chosen_name>.png`
+     `assets/display/<your_chosen_name>.png`
    Choose clear, lowercase, hyphenated names that describe what the screenshot shows \
    (e.g. `viewer-overview.png`, `hormuz-detections-cluster.png`, \
    `custom-class-panel.png`, `cfar-result-zoom.png`).
