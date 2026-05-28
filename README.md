@@ -1,142 +1,69 @@
-# 🛰️ Moonfleet — Sentinel-1 SAR Ship Detection Pipeline
+# 🌊 Moonfleet
 
-![Python](https://img.shields.io/badge/Python-3.11-blue)
-![SNAP](https://img.shields.io/badge/ESA%20SNAP-13-green)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+**Detect vessels anywhere in the ocean from a single command.**
 
-Automated ship detection pipeline for Sentinel-1 GRD imagery using ESA SNAP GPT.
-Leveraging data science and deep SAR processing to extract maritime intelligence
-from C-band radar data — all-weather, day and night.
+![Python](https://img.shields.io/badge/python-3.11-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![SNAP](https://img.shields.io/badge/SNAP-13-orange)
 
----
+## What it does
 
-## Results — Strait of Hormuz
+Moonfleet is an end-to-end vessel detection pipeline built on **Sentinel-1 SAR** imagery. From a single raw `.SAFE` product (or `.zip`), it runs a full SNAP processing graph — orbit correction, calibration, speckle filtering, terrain correction, land masking and CFAR-based ship detection — then parses the results into an enriched JSON report. The output is immediately viewable in a built-in interactive web map, complete with detection markers, vessel classes and live filters. **One command. From satellite tile to interactive map.**
 
-![Ship detections over the Strait of Hormuz](assets/display/hormuz_display.png)
+## Screenshots
 
-*Sentinel-1A IW GRD — May 25th 2026 — Example of CFAR detection over the Strait of Hormuz*
+![Viewer overview](data/data_raw/hormuz/displays/viewer-overview.png)
+*The Moonfleet viewer — dark maritime theme, detection markers, and run metadata at a glance.*
 
-*Nicer visuals incoming...*
+![Detections cluster over the Strait of Hormuz](data/data_raw/hormuz/displays/hormuz-detections-cluster.png)
+*A dense cluster of vessel detections over the Strait of Hormuz, with the tile footprint overlaid in cyan.*
 
----
+![Custom vessel class panel](data/data_raw/hormuz/displays/custom-class-panel.png)
+*Define your own vessel classes with per-class length and width intervals — fully editable from the UI.*
 
-## Features
+![CFAR detection zoom](data/data_raw/hormuz/displays/cfar-result-zoom.png)
+*Zoomed-in view of CFAR detections — each marker shows length, width and inferred class.*
 
-- Full Sentinel-1 GRD preprocessing chain (orbit, calibration, speckle filtering, terrain correction)
-- CFAR adaptive thresholding for ship detection
-- Land-sea masking to eliminate false alarms on coastlines
-- Object discrimination by size (min/max target size in meters)
-- Configurable AOI via WKT polygon passed as CLI argument
-- Lightweight Python wrapper around SNAP GPT — no snappy required
+## Key features
 
----
+- 🛰️ **One-command pipeline** — SNAP processing, XML parsing and JSON enrichment in a single call.
+- 🌐 **Interactive web viewer** with a dark maritime theme, built for quick visual inspection.
+- 🏷️ **Custom vessel classes** with per-class length and width intervals, editable on the fly.
+- 🎚️ **Live filtering** with length and width range sliders.
+- 🗺️ **AOI support or full-scene processing** — restrict to a WKT polygon or process the whole tile.
+- 📐 **Coverage overlay** — the AOI polygon or full tile footprint is drawn directly on the map.
+- ⚙️ **Run parameters embedded** in every JSON report and displayed in the viewer for full traceability.
+- 📂 **Multi-report support** with a dropdown selector to switch between missions.
 
-## Project Structure
+## How it works
 
-```
-moonfleet/
-├── src/
-│   └── relics/               # Obsolete scripts  
-│   └── naive.py              # Main processing script
-├── graphs/
-│   └── CFAR.xml              # SNAP GPT processing graph
-├── notebooks/                # Notebooks to handcraft new features  
-├── scripts/
-│   └── generate_readme.py    # README auto-generation via Claude API (soon to be tested)
-├── assets/display/
-│   └── hormuz_display.png # Result image for README
-├── outputs/                  # Processing outputs (gitignored)
-├── data/                     # Raw Sentinel-1 data (gitignored)
-├── moonfleet_env_light.yml   # Manually added librairies
-├── moonfleet_env_full.yml    # Full conda environment (with automatically added dependencies)
-├── .gitignore
-└── README.md
-```
+1. **Feed** a Sentinel-1 `.SAFE` product (directory or zip) to `main.py`.
+2. **SNAP GPT** runs the full processing graph and applies a CFAR detector.
+3. **Parse** the SNAP object-detection XML report into structured detections.
+4. **Enrich** the JSON with CFAR parameters and geographic coverage (AOI or tile footprint).
+5. **Open** the interactive viewer and explore your detections.
 
----
-
-## Installation
+## Quick start
 
 ```bash
-# Clone the repository
-git clone https://github.com/guigu/moonfleet.git
+# 1. Clone
+git clone https://github.com/yourname/moonfleet.git
 cd moonfleet
 
-# Using conda/mamba: create and activate conda environment (other solutions possible)
-conda env create -f moonfleet_env_light.yml
-conda activate moonfleet
+# 2. Create the environment
+mamba env create -f environment.yml
+mamba activate moonfleet
+
+# 3. Run the pipeline
+python src/main.py --input path/to/S1A_IW_GRDH_xxx.SAFE
 ```
 
-**Requirements:**
-- [ESA SNAP 13](https://step.esa.int/main/download/snap-download/) installed on your system
-- Ability to create a clean virtual environment 
-- Sentinel-1 GRD data (`.zip` or `.SAFE`)
-
----
-
-## Usage
+Then launch the viewer:
 
 ```bash
-python src/naive.py \
-  --graph graphs/CFAR.xml \
-  --input path/to/S1A_IW_GRDH_1SDV_...zip \
-  --aoi "POLYGON((55.886573 26.104849,54.503174 25.85428,54.637756 25.269536,56.063721 25.56760,55.886573 26.104849))"\
-  --output outputs/result.dim 
+python src/viewer/serve.py --open
 ```
 
-### Arguments
-
-| Argument | Required | Default | Description |
-|---|---|---|---|
-| `--graph` | ✅ | — | Path to the SNAP XML graph file |
-| `--input` | ✅ | — | Path to the Sentinel-1 input file (`.zip` or `.SAFE`) |
-| `--output` | ✅ | — | Path for the output file (`.dim`) |
-| `--aoi` | ✅ | — | Area of interest as WKT polygon (lon lat pairs) |
-| `--gpt` | ❌ | `C:\Program Files\esa-snap\bin\gpt.exe` | Path to SNAP GPT executable |
-
 ---
 
-## SNAP Processing Graph
-
-### CFAR.xml
-
-Complete Sentinel-1 GRD processing chain for maritime ship detection:
-
-| Step | Operator | Description |
-|---|---|---|
-| 1 | Read | Load Sentinel-1 GRD product |
-| 2 | Apply-Orbit-File | Apply precise orbit restitution (auto download) |
-| 3 | ThermalNoiseRemoval | Remove thermal noise floor |
-| 4 | Calibration | Radiometric calibration to Gamma0 |
-| 5 | Speckle-Filter | Lee Sigma speckle reduction (3×3) |
-| 6 | Terrain-Correction | Geometric correction using Copernicus 30m DEM |
-| 7 | Subset | Crop to AOI using WKT polygon |
-| 8 | Land-Sea-Mask | Mask land pixels |
-| 9 | AdaptiveThresholding | CFAR detection |
-| 10 | Object-Discrimination | Filter detections by size |
-| 11 | Write | Export to BEAM-DIMAP format |
-
----
-
-## Output
-
-The pipeline produces a **BEAM-DIMAP** product (`.dim` + `.data/` folder) containing:
-
-- `Gamma0_VH` — calibrated VH backscatter band
-- `Gamma0_VV` — calibrated VV backscatter band  
-- `Gamma0_VH_ship_bit_msk` — binary ship detection mask
-- Object Detection Report XML in `~/.snap/var/log/` (soon to be converted in CSV format and post-processed properly)
----
-
-## Dependencies
-
-| Package | Version | Usage |
-|---|---|---|
-| Python | 3.11 | Runtime |
-| ESA SNAP | 13 | SAR processing engine |
-
----
-
-## License
-
-MIT
+> For installation details, graph internals and configuration, see [`README_TECHNICAL.md`](README_TECHNICAL.md).

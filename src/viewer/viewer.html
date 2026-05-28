@@ -383,6 +383,26 @@
     color: var(--accent);
     margin-top: 4px;
   }
+  .range-number-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(30,45,69,0.9);
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    width: 38px;
+    text-align: center;
+    outline: none;
+    padding: 0 1px;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .range-number-input::-webkit-inner-spin-button,
+  .range-number-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .range-number-input:focus {
+    border-bottom-color: var(--accent);
+    background: rgba(0,212,255,0.05);
+  }
 
   /* BASEMAP SWITCHER */
   .basemap-btns { display: flex; gap: 8px; }
@@ -499,6 +519,36 @@
   }
   .statusbar .sep { opacity: 0.3; }
   #coords-display { color: var(--accent); min-width: 200px; }
+
+  /* DRAG HANDLE */
+  #det-resize-handle {
+    flex-shrink: 0;
+    height: 6px;
+    cursor: row-resize;
+    position: relative;
+    background: transparent;
+    transition: background 0.15s;
+  }
+  #det-resize-handle:hover,
+  #det-resize-handle.dragging {
+    background: rgba(0,212,255,0.08);
+  }
+  #det-resize-handle::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--panel-border);
+    transition: background 0.15s;
+  }
+  #det-resize-handle:hover::after,
+  #det-resize-handle.dragging::after {
+    background: var(--accent);
+  }
 
   /* Cluster customization */
   .marker-cluster-small div,
@@ -653,8 +703,8 @@
               <input type="range" class="range-input" id="len-max-slider" oninput="onLenMaxInput()">
             </div>
             <div class="range-labels">
-              <span id="len-min-lbl">0 m</span>
-              <span id="len-max-lbl">— m</span>
+              <span><input type="number" class="range-number-input" id="len-min-inp" onchange="onLenMinTyped()"> m</span>
+              <span><input type="number" class="range-number-input" id="len-max-inp" onchange="onLenMaxTyped()"> m</span>
             </div>
           </div>
           <div class="stat-separator" style="margin-top:12px;">Width (m)</div>
@@ -665,8 +715,8 @@
               <input type="range" class="range-input" id="wid-max-slider" oninput="onWidMaxInput()">
             </div>
             <div class="range-labels">
-              <span id="wid-min-lbl">0 m</span>
-              <span id="wid-max-lbl">— m</span>
+              <span><input type="number" class="range-number-input" id="wid-min-inp" onchange="onWidMinTyped()"> m</span>
+              <span><input type="number" class="range-number-input" id="wid-max-inp" onchange="onWidMaxTyped()"> m</span>
             </div>
           </div>
         </div>
@@ -736,10 +786,14 @@
 
     </div><!-- end .sidebar-top -->
 
-    <!-- Detection list — always visible at the bottom -->
-    <div class="det-list-area">
-      <div class="det-list-header">
+    <!-- Drag handle — resize the split between config sections and detection list -->
+    <div id="det-resize-handle"></div>
+
+    <!-- Detection list — collapsible, takes remaining space when open -->
+    <div class="det-list-area" id="det-list-area">
+      <div class="det-list-header" onclick="toggleDetList()" style="cursor:pointer;">
         Detections <span id="list-count">— shown</span>
+        <span class="stats-toggle-icon open" id="det-list-icon">▾</span>
       </div>
       <div class="det-list-wrap" id="det-list"></div>
     </div>
@@ -857,6 +911,8 @@ const BASEMAPS = {
 };
 
 // ─── STATE ───────────────────────────────────────────────────────
+// Persists across JSON changes (page not reloaded on report switch)
+let sidebarSplit = 42; // % of sidebar height given to sidebar-top when list is open
 let markerSize      = 8;
 let hiddenClasses   = new Set();
 let activeMarker    = null;
@@ -1146,6 +1202,16 @@ function initRangeSliders(lenMin, lenMax, widMin, widMax) {
   widMinS.value = lo_wid;
   widMaxS.value = hi_wid;
 
+  // Propagate slider bounds to the number inputs
+  ['len-min-inp','len-max-inp'].forEach(id => {
+    const el = document.getElementById(id);
+    el.min = lo_len; el.max = hi_len;
+  });
+  ['wid-min-inp','wid-max-inp'].forEach(id => {
+    const el = document.getElementById(id);
+    el.min = lo_wid; el.max = hi_wid;
+  });
+
   lengthFilter = { min: lo_len, max: hi_len };
   widthFilter  = { min: lo_wid, max: hi_wid };
 
@@ -1157,8 +1223,8 @@ function updateSliderUI(prefix) {
   const minS = document.getElementById(`${prefix}-min-slider`);
   const maxS = document.getElementById(`${prefix}-max-slider`);
   const lo = parseInt(minS.value), hi = parseInt(maxS.value);
-  document.getElementById(`${prefix}-min-lbl`).textContent = lo + ' m';
-  document.getElementById(`${prefix}-max-lbl`).textContent = hi + ' m';
+  document.getElementById(`${prefix}-min-inp`).value = lo;
+  document.getElementById(`${prefix}-max-inp`).value = hi;
   const gMin = parseInt(minS.min), gMax = parseInt(minS.max);
   const range = gMax - gMin || 1;
   const fill = document.getElementById(`${prefix}-fill`);
@@ -1198,6 +1264,23 @@ function onWidMaxInput() {
   widthFilter = { min: parseInt(minS.value), max: parseInt(maxS.value) };
   scheduleFilterUpdate();
 }
+
+// Sync a typed number input value → its slider → filter update
+function onTyped(minInpId, maxInpId, minSliderId, maxSliderId, sliderCb) {
+  const minInp = document.getElementById(minInpId);
+  const maxInp = document.getElementById(maxInpId);
+  const minS   = document.getElementById(minSliderId);
+  const maxS   = document.getElementById(maxSliderId);
+  // Clamp and enforce min ≤ max
+  let lo = Math.max(parseInt(minS.min), Math.min(parseInt(maxS.value), parseInt(minInp.value) || 0));
+  let hi = Math.min(parseInt(maxS.max), Math.max(parseInt(minS.value), parseInt(maxInp.value) || 0));
+  minS.value = lo; maxS.value = hi;
+  sliderCb(); // reuse existing slider logic to update fill + filter
+}
+function onLenMinTyped() { onTyped('len-min-inp','len-max-inp','len-min-slider','len-max-slider', onLenMinInput); }
+function onLenMaxTyped() { onTyped('len-min-inp','len-max-inp','len-min-slider','len-max-slider', onLenMaxInput); }
+function onWidMinTyped() { onTyped('wid-min-inp','wid-max-inp','wid-min-slider','wid-max-slider', onWidMinInput); }
+function onWidMaxTyped() { onTyped('wid-min-inp','wid-max-inp','wid-min-slider','wid-max-slider', onWidMaxInput); }
 
 function scheduleFilterUpdate() {
   clearTimeout(_filterTimer);
@@ -1287,6 +1370,65 @@ function updateStats(s) {
     `${s.bbox.lat_min.toFixed(3)}° → ${s.bbox.lat_max.toFixed(3)}°`;
   document.getElementById('stat-bbox-lon').textContent =
     `${s.bbox.lon_min.toFixed(3)}° → ${s.bbox.lon_max.toFixed(3)}°`;
+}
+
+// ─── DETECTIONS LIST TOGGLE ──────────────────────────────────────
+function toggleDetList() {
+  const wrap     = document.getElementById('det-list');
+  const icon     = document.getElementById('det-list-icon');
+  const area     = document.getElementById('det-list-area');
+  const topPanel = document.querySelector('.sidebar-top');
+  const handle   = document.getElementById('det-resize-handle');
+  const isOpen   = wrap.style.display !== 'none';
+
+  if (isOpen) {
+    wrap.style.display       = 'none';
+    icon.classList.remove('open');
+    area.style.flex          = '0 0 auto';
+    area.style.minHeight     = '0';
+    topPanel.style.maxHeight = '';
+    handle.style.display     = 'none';
+  } else {
+    wrap.style.display       = '';
+    icon.classList.add('open');
+    area.style.flex          = '1';
+    area.style.minHeight     = '120px';
+    topPanel.style.maxHeight = sidebarSplit + '%';
+    handle.style.display     = '';
+  }
+}
+
+// ─── DRAG HANDLE ─────────────────────────────────────────────────
+function initDragHandle() {
+  const handle   = document.getElementById('det-resize-handle');
+  const sidebar  = document.querySelector('.sidebar');
+  const topPanel = document.querySelector('.sidebar-top');
+  let dragging   = false;
+
+  // Apply stored split on load
+  topPanel.style.maxHeight = sidebarSplit + '%';
+
+  handle.addEventListener('mousedown', e => {
+    dragging = true;
+    handle.classList.add('dragging');
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const rect = sidebar.getBoundingClientRect();
+    const pct  = (e.clientY - rect.top) / rect.height * 100;
+    sidebarSplit = Math.max(15, Math.min(78, pct));
+    topPanel.style.maxHeight = sidebarSplit + '%';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.userSelect = '';
+  });
 }
 
 // ─── FILTERS PANEL ───────────────────────────────────────────────
@@ -1420,6 +1562,7 @@ function parseWktPolygon(wkt) {
 }
 
 // ─── INIT ────────────────────────────────────────────────────────
+initDragHandle();
 populateReportSelector();
 </script>
 </body>
