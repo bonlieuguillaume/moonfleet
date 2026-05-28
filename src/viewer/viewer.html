@@ -39,7 +39,6 @@
     overflow: hidden;
   }
 
-  /* SCAN LINE EFFECT */
   body::before {
     content: '';
     position: fixed;
@@ -86,14 +85,8 @@
     white-space: nowrap;
   }
 
-  .header-stats {
-    display: flex;
-    gap: 16px;
-    margin-left: auto;
-  }
-  .header-stat {
-    text-align: right;
-  }
+  .header-stats { display: flex; gap: 16px; margin-left: auto; }
+  .header-stat { text-align: right; }
   .header-stat .val {
     font-family: 'Space Mono', monospace;
     font-size: 1rem;
@@ -119,15 +112,12 @@
     outline: none;
     max-width: 220px;
   }
-  .report-select option {
-    background: var(--panel);
-    color: var(--text);
-  }
+  .report-select option { background: var(--panel); color: var(--text); }
 
   /* MAIN LAYOUT */
   .main { display: flex; flex: 1; overflow: hidden; }
 
-  /* SIDEBAR */
+  /* SIDEBAR — flex column: scrollable top + fixed-height detection list */
   .sidebar {
     width: 280px;
     background: var(--panel);
@@ -136,6 +126,25 @@
     flex-direction: column;
     overflow: hidden;
     flex-shrink: 0;
+  }
+
+  /* All configuration sections live here and scroll when they overflow */
+  .sidebar-top {
+    overflow-y: auto;
+    flex: 0 1 auto;   /* shrinks when space is tight */
+    min-height: 0;
+  }
+  .sidebar-top::-webkit-scrollbar { width: 3px; }
+  .sidebar-top::-webkit-scrollbar-track { background: transparent; }
+  .sidebar-top::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+
+  /* Detection list always gets the remaining space */
+  .det-list-area {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 150px;
   }
 
   .sidebar-section {
@@ -153,7 +162,26 @@
     margin-bottom: 12px;
   }
 
-  /* CLASS BREAKDOWN */
+  /* CLASS TABS */
+  .class-tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+  .class-tab {
+    flex: 1;
+    padding: 5px 8px;
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    font-size: 0.65rem;
+    font-family: 'Space Mono', monospace;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .class-tab:hover { border-color: var(--accent); color: var(--accent); }
+  .class-tab.active { background: rgba(0,212,255,0.1); border-color: var(--accent); color: var(--accent); }
+
+  /* CLASS BREAKDOWN (default mode) */
   .class-row {
     display: flex;
     align-items: center;
@@ -172,18 +200,105 @@
   .class-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .class-name { font-size: 0.8rem; }
   .class-range { font-size: 0.68rem; color: var(--text-dim); }
-
-  .class-count {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.75rem;
-    font-weight: 700;
-  }
-
+  .class-count { font-family: 'Space Mono', monospace; font-size: 0.75rem; font-weight: 700; }
   .class-bar-wrap { margin-top: 2px; }
   .class-bar { height: 3px; background: var(--panel-border); border-radius: 2px; overflow: hidden; }
   .class-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
 
-  /* STATS PANEL */
+  /* CUSTOM CLASS FORM */
+  .custom-class-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .cc-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 2px;
+  }
+  .cc-input {
+    background: rgba(0,212,255,0.05);
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.72rem;
+    color: var(--text);
+    outline: none;
+    width: 100%;
+  }
+  .cc-input:focus { border-color: rgba(0,212,255,0.4); }
+  .cc-input::placeholder { color: var(--text-dim); }
+  .cc-row { display: flex; gap: 5px; align-items: center; }
+  .cc-row .cc-input { flex: 1; min-width: 0; }
+  .cc-row span { color: var(--text-dim); font-size: 0.72rem; flex-shrink: 0; }
+  input[type="color"].cc-color {
+    width: 30px; height: 28px;
+    padding: 2px;
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .cc-add-btn {
+    width: 100%;
+    padding: 6px;
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.3);
+    border-radius: 4px;
+    color: var(--accent);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .cc-add-btn:hover { background: rgba(0,212,255,0.2); }
+
+  /* CUSTOM CLASS LIST */
+  .custom-class-list { display: flex; flex-direction: column; gap: 4px; }
+  .custom-class-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    transition: opacity 0.15s;
+    cursor: pointer;
+    user-select: none;
+  }
+  .custom-class-row:hover { background: rgba(255,255,255,0.04); }
+  .custom-class-row.hidden { opacity: 0.4; }
+  .cc-del-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: color 0.15s;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .cc-del-btn:hover { color: #f87171; }
+  .cc-empty {
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    text-align: center;
+    padding: 12px 0;
+    font-style: italic;
+  }
+
+  /* COLLAPSIBLE PANELS */
   .section-title-btn {
     display: flex;
     justify-content: space-between;
@@ -195,6 +310,7 @@
   .stats-toggle-icon { font-size: 0.55rem; transition: transform 0.2s; }
   .stats-toggle-icon.open { transform: rotate(180deg); }
 
+  /* STAT ROWS */
   .stat-row {
     display: flex;
     justify-content: space-between;
@@ -205,11 +321,7 @@
   }
   .stat-row:last-child { border-bottom: none; }
   .stat-key { color: var(--text-dim); }
-  .stat-val {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--text);
-  }
+  .stat-val { font-family: 'Space Mono', monospace; font-size: 0.68rem; color: var(--text); }
   .stat-separator {
     font-family: 'Space Mono', monospace;
     font-size: 0.6rem;
@@ -217,6 +329,59 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin: 8px 0 4px;
+  }
+
+  /* DUAL-RANGE SLIDER */
+  .range-filter { margin: 4px 0 2px; }
+  .range-track-wrap { position: relative; height: 22px; margin: 2px 0; }
+  .range-track {
+    position: absolute;
+    left: 0; right: 0;
+    top: 50%; transform: translateY(-50%);
+    height: 3px;
+    background: var(--panel-border);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+  .range-fill { position: absolute; height: 100%; background: var(--accent); border-radius: 2px; }
+  .range-input {
+    position: absolute;
+    width: 100%;
+    background: none;
+    pointer-events: none;
+    -webkit-appearance: none;
+    appearance: none;
+    top: 50%; transform: translateY(-50%);
+    height: 3px;
+    outline: none;
+    margin: 0;
+  }
+  .range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    pointer-events: all;
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 4px rgba(0,212,255,0.5);
+  }
+  .range-input::-moz-range-thumb {
+    pointer-events: all;
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--bg);
+    box-shadow: 0 0 4px rgba(0,212,255,0.5);
+  }
+  .range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--accent);
+    margin-top: 4px;
   }
 
   /* BASEMAP SWITCHER */
@@ -237,32 +402,13 @@
   .basemap-btn:hover { border-color: var(--accent); color: var(--accent); }
   .basemap-btn.active { background: rgba(0,212,255,0.1); border-color: var(--accent); color: var(--accent); }
 
-  /* OPACITY SLIDER */
+  /* MARKER SIZE SLIDER */
   .slider-wrap { display: flex; align-items: center; gap: 10px; }
   .slider-wrap label { font-size: 0.72rem; color: var(--text-dim); white-space: nowrap; }
-  input[type=range] {
-    flex: 1;
-    accent-color: var(--accent);
-    height: 3px;
-  }
-  .slider-val {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.68rem;
-    color: var(--accent);
-    width: 30px;
-    text-align: right;
-  }
+  input[type=range] { flex: 1; accent-color: var(--accent); height: 3px; }
+  .slider-val { font-family: 'Space Mono', monospace; font-size: 0.68rem; color: var(--accent); width: 30px; text-align: right; }
 
   /* DETECTIONS LIST */
-  .det-list-wrap {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0 0 8px 0;
-  }
-  .det-list-wrap::-webkit-scrollbar { width: 4px; }
-  .det-list-wrap::-webkit-scrollbar-track { background: transparent; }
-  .det-list-wrap::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
-
   .det-list-header {
     padding: 10px 16px 6px;
     font-family: 'Space Mono', monospace;
@@ -271,17 +417,19 @@
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--accent);
-    position: sticky;
-    top: 0;
     background: var(--panel);
     border-bottom: 1px solid var(--panel-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    z-index: 10;
+    flex-shrink: 0;
   }
-
   .det-list-header span { font-weight: 400; color: var(--text-dim); }
+
+  .det-list-wrap { flex: 1; overflow-y: auto; padding: 0 0 8px 0; }
+  .det-list-wrap::-webkit-scrollbar { width: 4px; }
+  .det-list-wrap::-webkit-scrollbar-track { background: transparent; }
+  .det-list-wrap::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
 
   .det-item {
     display: flex;
@@ -295,12 +443,7 @@
   .det-item:hover { background: rgba(255,255,255,0.04); }
   .det-item.active { background: rgba(0,212,255,0.08); }
 
-  .det-icon {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
+  .det-icon { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .det-body { flex: 1; min-width: 0; }
   .det-size { font-size: 0.78rem; font-weight: 500; }
   .det-coords {
@@ -311,18 +454,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .det-len {
-    font-family: 'Space Mono', monospace;
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    white-space: nowrap;
-  }
+  .det-len { font-family: 'Space Mono', monospace; font-size: 0.72rem; color: var(--text-dim); white-space: nowrap; }
 
   /* MAP */
-  #map {
-    flex: 1;
-    background: #060d1a;
-  }
+  #map { flex: 1; background: #060d1a; }
 
   /* POPUP */
   .leaflet-popup-content-wrapper {
@@ -345,17 +480,9 @@
     padding-bottom: 8px;
     border-bottom: 1px solid var(--panel-border);
   }
-  .popup-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.75rem;
-    margin-bottom: 4px;
-  }
+  .popup-row { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 4px; }
   .popup-row .pk { color: var(--text-dim); }
-  .popup-row .pv {
-    font-family: 'Space Mono', monospace;
-    font-weight: 700;
-  }
+  .popup-row .pv { font-family: 'Space Mono', monospace; font-weight: 700; }
 
   /* STATUS BAR */
   .statusbar {
@@ -400,7 +527,7 @@
   <select id="report-select" class="report-select" onchange="loadReport(this.value)"></select>
   <div class="header-stats">
     <div class="header-stat">
-      <div class="val" id="total-count">911</div>
+      <div class="val" id="total-count">—</div>
       <div class="lbl">Detections</div>
     </div>
     <div class="header-stat">
@@ -416,111 +543,209 @@
 
 <div class="main">
   <div class="sidebar">
-    <!-- CLASS FILTER -->
-    <div class="sidebar-section">
-      <div class="section-title">Vessel Classes</div>
 
-      <div class="class-row" data-class="small" onclick="toggleClass('small')">
-        <div class="class-left">
-          <div class="class-dot" style="background:#4ade80"></div>
-          <div>
-            <div class="class-name">Small</div>
-            <div class="class-range">&lt; 50 m</div>
+    <!-- scrollable configuration area -->
+    <div class="sidebar-top">
+
+      <!-- CLASS FILTER -->
+      <div class="sidebar-section">
+        <div class="section-title">Vessel Classes</div>
+        <div class="class-tabs">
+          <button class="class-tab active" id="tab-default" onclick="switchClassMode('default')">Default</button>
+          <button class="class-tab" id="tab-custom" onclick="switchClassMode('custom')">Custom</button>
+        </div>
+
+        <!-- Default mode: 4 fixed size classes -->
+        <div id="default-classes-panel">
+          <div class="class-row" data-class="small" onclick="toggleClass('small')">
+            <div class="class-left">
+              <div class="class-dot" style="background:#4ade80"></div>
+              <div>
+                <div class="class-name">Small</div>
+                <div class="class-range">&lt; 50 m</div>
+              </div>
+            </div>
+            <div>
+              <div class="class-count" style="color:#4ade80" id="cnt-small">—</div>
+              <div class="class-bar-wrap"><div class="class-bar"><div class="class-bar-fill" style="background:#4ade80; width:0%"></div></div></div>
+            </div>
+          </div>
+
+          <div class="class-row" data-class="medium" onclick="toggleClass('medium')">
+            <div class="class-left">
+              <div class="class-dot" style="background:#facc15"></div>
+              <div>
+                <div class="class-name">Medium</div>
+                <div class="class-range">50 – 150 m</div>
+              </div>
+            </div>
+            <div>
+              <div class="class-count" style="color:#facc15" id="cnt-medium">—</div>
+              <div class="class-bar-wrap"><div class="class-bar"><div class="class-bar-fill" style="background:#facc15; width:0%"></div></div></div>
+            </div>
+          </div>
+
+          <div class="class-row" data-class="large" onclick="toggleClass('large')">
+            <div class="class-left">
+              <div class="class-dot" style="background:#fb923c"></div>
+              <div>
+                <div class="class-name">Large</div>
+                <div class="class-range">150 – 250 m</div>
+              </div>
+            </div>
+            <div>
+              <div class="class-count" style="color:#fb923c" id="cnt-large">—</div>
+              <div class="class-bar-wrap"><div class="class-bar"><div class="class-bar-fill" style="background:#fb923c; width:0%"></div></div></div>
+            </div>
+          </div>
+
+          <div class="class-row" data-class="very_large" onclick="toggleClass('very_large')">
+            <div class="class-left">
+              <div class="class-dot" style="background:#f87171"></div>
+              <div>
+                <div class="class-name">Very Large</div>
+                <div class="class-range">&gt; 250 m</div>
+              </div>
+            </div>
+            <div>
+              <div class="class-count" style="color:#f87171" id="cnt-vlarge">—</div>
+              <div class="class-bar-wrap"><div class="class-bar"><div class="class-bar-fill" style="background:#f87171; width:0%"></div></div></div>
+            </div>
           </div>
         </div>
-        <div>
-          <div class="class-count" style="color:#4ade80" id="cnt-small">251</div>
-          <div class="class-bar-wrap"><div class="class-bar"><div class="class-bar-fill" style="background:#4ade80; width:27%"></div></div></div>
-        </div>
-      </div>
 
-      <div class="class-row" data-class="medium" onclick="toggleClass('medium')">
-        <div class="class-left">
-          <div class="class-dot" style="background:#facc15"></div>
-          <div>
-            <div class="class-name">Medium</div>
-            <div class="class-range">50 – 150 m</div>
+        <!-- Custom mode: user-defined classes with length AND/OR width intervals -->
+        <div id="custom-classes-panel" style="display:none">
+          <div class="custom-class-form">
+            <input class="cc-input" type="text" id="cc-name" placeholder="Class name">
+            <div class="cc-label">Length (m) — required</div>
+            <div class="cc-row">
+              <input class="cc-input" type="number" id="cc-min-len" placeholder="Min" min="0">
+              <span>–</span>
+              <input class="cc-input" type="number" id="cc-max-len" placeholder="Max" min="0">
+              <input type="color" class="cc-color" id="cc-color" value="#00d4ff">
+            </div>
+            <div class="cc-label">Width (m) — optional</div>
+            <div class="cc-row">
+              <input class="cc-input" type="number" id="cc-min-wid" placeholder="Min" min="0">
+              <span>–</span>
+              <input class="cc-input" type="number" id="cc-max-wid" placeholder="Max" min="0">
+            </div>
+            <button class="cc-add-btn" onclick="addCustomClass()">+ Add class</button>
+          </div>
+          <div class="custom-class-list" id="custom-class-list">
+            <div class="cc-empty">No classes defined</div>
           </div>
         </div>
-        <div>
-          <div class="class-count" style="color:#facc15" id="cnt-medium">423</div>
-          <div class="class-bar-wrap"><div class="class-bar"><div class="class-bar-fill" style="background:#facc15; width:46%"></div></div></div>
-        </div>
       </div>
 
-      <div class="class-row" data-class="large" onclick="toggleClass('large')">
-        <div class="class-left">
-          <div class="class-dot" style="background:#fb923c"></div>
-          <div>
-            <div class="class-name">Large</div>
-            <div class="class-range">150 – 250 m</div>
+      <!-- FILTERS -->
+      <div class="sidebar-section">
+        <div class="section-title section-title-btn" onclick="toggleFilters()">
+          Filters <span class="stats-toggle-icon" id="filters-icon">▾</span>
+        </div>
+        <div id="filters-panel" style="display:none; margin-top:8px;">
+          <div class="stat-separator">Length (m)</div>
+          <div class="range-filter">
+            <div class="range-track-wrap">
+              <div class="range-track"><div class="range-fill" id="len-fill"></div></div>
+              <input type="range" class="range-input" id="len-min-slider" oninput="onLenMinInput()">
+              <input type="range" class="range-input" id="len-max-slider" oninput="onLenMaxInput()">
+            </div>
+            <div class="range-labels">
+              <span id="len-min-lbl">0 m</span>
+              <span id="len-max-lbl">— m</span>
+            </div>
+          </div>
+          <div class="stat-separator" style="margin-top:12px;">Width (m)</div>
+          <div class="range-filter">
+            <div class="range-track-wrap">
+              <div class="range-track"><div class="range-fill" id="wid-fill"></div></div>
+              <input type="range" class="range-input" id="wid-min-slider" oninput="onWidMinInput()">
+              <input type="range" class="range-input" id="wid-max-slider" oninput="onWidMaxInput()">
+            </div>
+            <div class="range-labels">
+              <span id="wid-min-lbl">0 m</span>
+              <span id="wid-max-lbl">— m</span>
+            </div>
           </div>
         </div>
-        <div>
-          <div class="class-count" style="color:#fb923c" id="cnt-large">135</div>
-          <div class="class-bar-wrap"><div class="class-bar"><div class="class-bar-fill" style="background:#fb923c; width:15%"></div></div></div>
+      </div>
+
+      <!-- STATS -->
+      <div class="sidebar-section">
+        <div class="section-title section-title-btn" onclick="toggleStats()">
+          Statistics <span class="stats-toggle-icon" id="stats-icon">▾</span>
+        </div>
+        <div id="stats-panel" style="display:none; margin-top:8px;">
+          <div class="stat-row"><span class="stat-key">Total</span><span class="stat-val" id="stat-total">—</span></div>
+          <div class="stat-separator">Length</div>
+          <div class="stat-row"><span class="stat-key">Min</span><span class="stat-val" id="stat-len-min">—</span></div>
+          <div class="stat-row"><span class="stat-key">Max</span><span class="stat-val" id="stat-len-max">—</span></div>
+          <div class="stat-row"><span class="stat-key">Mean</span><span class="stat-val" id="stat-len-mean">—</span></div>
+          <div class="stat-separator">Bounding Box</div>
+          <div class="stat-row"><span class="stat-key">Lat</span><span class="stat-val" id="stat-bbox-lat">—</span></div>
+          <div class="stat-row"><span class="stat-key">Lon</span><span class="stat-val" id="stat-bbox-lon">—</span></div>
         </div>
       </div>
 
-      <div class="class-row" data-class="very_large" onclick="toggleClass('very_large')">
-        <div class="class-left">
-          <div class="class-dot" style="background:#f87171"></div>
-          <div>
-            <div class="class-name">Very Large</div>
-            <div class="class-range">&gt; 250 m</div>
-          </div>
+      <!-- RUN PARAMETERS -->
+      <div class="sidebar-section">
+        <div class="section-title section-title-btn" onclick="toggleParams()">
+          Run Parameters <span class="stats-toggle-icon" id="params-icon">▾</span>
         </div>
-        <div>
-          <div class="class-count" style="color:#f87171" id="cnt-vlarge">102</div>
-          <div class="class-bar-wrap"><div class="class-bar"><div class="class-bar-fill" style="background:#f87171; width:11%"></div></div></div>
+        <div id="params-panel" style="display:none; margin-top:8px;">
+          <div class="stat-row"><span class="stat-key">Target window</span><span class="stat-val" id="param-tw">—</span></div>
+          <div class="stat-row"><span class="stat-key">Guard window</span><span class="stat-val" id="param-gw">—</span></div>
+          <div class="stat-row"><span class="stat-key">Background win.</span><span class="stat-val" id="param-bw">—</span></div>
+          <div class="stat-row"><span class="stat-key">PFA (10^-x)</span><span class="stat-val" id="param-pfa">—</span></div>
+          <div class="stat-row"><span class="stat-key">Est. background</span><span class="stat-val" id="param-estbg">—</span></div>
+          <div class="stat-row"><span class="stat-key">Min target</span><span class="stat-val" id="param-min">—</span></div>
+          <div class="stat-row"><span class="stat-key">Max target</span><span class="stat-val" id="param-max">—</span></div>
+          <div class="stat-row"><span class="stat-key">Shoreline ext.</span><span class="stat-val" id="param-shore">—</span></div>
         </div>
       </div>
+
+      <!-- COVERAGE -->
+      <div class="sidebar-section">
+        <div class="section-title">Coverage</div>
+        <button id="coverage-btn" class="basemap-btn" style="width:100%;margin-bottom:6px;"
+                onclick="toggleCoverage()" disabled>Display coverage</button>
+        <div id="coverage-label" style="font-size:0.62rem;color:var(--text-dim);text-align:center;">—</div>
+      </div>
+
+      <!-- BASEMAP -->
+      <div class="sidebar-section">
+        <div class="section-title">Basemap</div>
+        <div class="basemap-btns">
+          <button class="basemap-btn active" onclick="setBasemap('dark')">Dark</button>
+          <button class="basemap-btn" onclick="setBasemap('satellite')">SAT</button>
+          <button class="basemap-btn" onclick="setBasemap('osm')">OSM</button>
+        </div>
+      </div>
+
+      <!-- MARKER SIZE -->
+      <div class="sidebar-section">
+        <div class="section-title">Marker Size</div>
+        <div class="slider-wrap">
+          <label>Size</label>
+          <input type="range" min="4" max="20" value="8" id="size-slider" oninput="updateMarkerSize(this.value)">
+          <span class="slider-val" id="size-val">8</span>
+        </div>
+      </div>
+
+    </div><!-- end .sidebar-top -->
+
+    <!-- Detection list — always visible at the bottom -->
+    <div class="det-list-area">
+      <div class="det-list-header">
+        Detections <span id="list-count">— shown</span>
+      </div>
+      <div class="det-list-wrap" id="det-list"></div>
     </div>
 
-    <!-- STATS -->
-    <div class="sidebar-section">
-      <div class="section-title section-title-btn" onclick="toggleStats()">
-        Statistics <span class="stats-toggle-icon" id="stats-icon">▾</span>
-      </div>
-      <div id="stats-panel" style="display:none; margin-top:8px;">
-        <div class="stat-separator">Length</div>
-        <div class="stat-row"><span class="stat-key">Min</span><span class="stat-val" id="stat-len-min">—</span></div>
-        <div class="stat-row"><span class="stat-key">Max</span><span class="stat-val" id="stat-len-max">—</span></div>
-        <div class="stat-row"><span class="stat-key">Mean</span><span class="stat-val" id="stat-len-mean">—</span></div>
-        <div class="stat-separator">Bounding Box</div>
-        <div class="stat-row"><span class="stat-key">Lat</span><span class="stat-val" id="stat-bbox-lat">—</span></div>
-        <div class="stat-row"><span class="stat-key">Lon</span><span class="stat-val" id="stat-bbox-lon">—</span></div>
-      </div>
-    </div>
-
-    <!-- BASEMAP -->
-    <div class="sidebar-section">
-      <div class="section-title">Basemap</div>
-      <div class="basemap-btns">
-        <button class="basemap-btn active" onclick="setBasemap('dark')">Dark</button>
-        <button class="basemap-btn" onclick="setBasemap('satellite')">SAT</button>
-        <button class="basemap-btn" onclick="setBasemap('osm')">OSM</button>
-      </div>
-    </div>
-
-    <!-- MARKER SIZE -->
-    <div class="sidebar-section">
-      <div class="section-title">Marker Size</div>
-      <div class="slider-wrap">
-        <label>Size</label>
-        <input type="range" min="4" max="20" value="8" id="size-slider" oninput="updateMarkerSize(this.value)">
-        <span class="slider-val" id="size-val">8</span>
-      </div>
-    </div>
-
-    <!-- DETECTIONS LIST -->
-    <div class="det-list-header">
-      Detections <span id="list-count">911 shown</span>
-    </div>
-    <div class="det-list-wrap" id="det-list"></div>
   </div>
 
-  
   <!-- LOADING OVERLAY -->
   <div id="load-overlay" style="
     position:fixed;inset:0;
@@ -536,7 +761,7 @@
     <div id="load-status" style="color:#64748b;font-size:0.75rem;"></div>
   </div>
 
-<div id="map"></div>
+  <div id="map"></div>
 </div>
 
 <div class="statusbar">
@@ -568,7 +793,6 @@ async function loadDetections(filename = 'detections.json') {
     DETECTIONS_DATA = await res.json();
     detections = DETECTIONS_DATA.detections;
 
-    // Update header
     const m = DETECTIONS_DATA.metadata;
     const s = DETECTIONS_DATA.stats;
     if (m.satellite) document.getElementById('sat-pill').textContent = `${m.satellite} · ${m.mode} · ${m.product_type}`;
@@ -576,23 +800,31 @@ async function loadDetections(filename = 'detections.json') {
     if (m.orbit)      document.getElementById('orbit-pill').textContent = `ORB #${m.orbit}`;
     document.getElementById('total-count').textContent = s.total_detections;
 
-    // Update class counts
     document.getElementById('cnt-small').textContent  = s.by_class.small;
     document.getElementById('cnt-medium').textContent = s.by_class.medium;
     document.getElementById('cnt-large').textContent  = s.by_class.large;
     document.getElementById('cnt-vlarge').textContent = s.by_class.very_large;
 
-    // Update bar widths
     const total = s.total_detections;
-    const bars = document.querySelectorAll('.class-bar-fill');
-    const vals = [s.by_class.small, s.by_class.medium, s.by_class.large, s.by_class.very_large];
-    bars.forEach((b,i) => b.style.width = Math.round(vals[i]/total*100) + '%');
+    const bars  = document.querySelectorAll('.class-bar-fill');
+    const vals  = [s.by_class.small, s.by_class.medium, s.by_class.large, s.by_class.very_large];
+    bars.forEach((b, i) => b.style.width = Math.round(vals[i] / total * 100) + '%');
 
-    document.getElementById('load-overlay').style.display = 'none';
-    statusEl.textContent = '';
+    // Init range sliders from actual data bounds
+    const lengths = detections.map(d => d.length_m);
+    const widths  = detections.map(d => d.width_m);
+    initRangeSliders(
+      Math.min(...lengths), Math.max(...lengths),
+      Math.min(...widths),  Math.max(...widths)
+    );
+
+    updateStats(s);
+    updateRunParams(DETECTIONS_DATA.parameters || null);
+    setupCoverageBtn(DETECTIONS_DATA.coverage   || null);
     buildMarkers();
     buildList();
-    updateStats(s);
+    document.getElementById('load-overlay').style.display = 'none';
+    statusEl.textContent = '';
     map.fitBounds([
       [s.bbox.lat_min, s.bbox.lon_min],
       [s.bbox.lat_max, s.bbox.lon_max]
@@ -625,13 +857,23 @@ const BASEMAPS = {
 };
 
 // ─── STATE ───────────────────────────────────────────────────────
-let markerSize = 8;
-let hiddenClasses = new Set();
-let activeMarker = null;
-let markerLayers = {}; // class -> L.MarkerClusterGroup
-let currentBasemap = null;
+let markerSize      = 8;
+let hiddenClasses   = new Set();
+let activeMarker    = null;
+let markerLayers    = {};
+let currentBasemap  = null;
 let currentBasemapKey = 'dark';
-let allMarkers = {}; // index -> L.circleMarker
+let allMarkers      = {};
+
+// Custom class state
+let classMode     = 'default';  // 'default' | 'custom'
+let customClasses = [];         // {id, name, minLen, maxLen, minWidth, maxWidth, color, hidden}
+let ccIdCounter   = 0;
+
+// Global range filters (set by sliders)
+let lengthFilter = { min: -Infinity, max: Infinity };
+let widthFilter  = { min: -Infinity, max: Infinity };
+let _filterTimer = null;
 
 // ─── MAP INIT ────────────────────────────────────────────────────
 const map = L.map('map', {
@@ -641,7 +883,6 @@ const map = L.map('map', {
   preferCanvas: true
 });
 
-// Basemap
 function setBasemap(key) {
   if (currentBasemap) map.removeLayer(currentBasemap);
   currentBasemap = L.tileLayer(BASEMAPS[key], {
@@ -651,116 +892,320 @@ function setBasemap(key) {
   }).addTo(map);
   currentBasemapKey = key;
   document.querySelectorAll('.basemap-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent.toLowerCase() === key || 
-      (key === 'satellite' && b.textContent === 'SAT') ||
-      (key === 'osm' && b.textContent === 'OSM') ||
-      (key === 'dark' && b.textContent === 'Dark'));
+    b.classList.toggle('active',
+      (b.textContent === 'Dark' && key === 'dark') ||
+      (b.textContent === 'SAT'  && key === 'satellite') ||
+      (b.textContent === 'OSM'  && key === 'osm')
+    );
   });
 }
 setBasemap('dark');
 
-// Coordinate display
 map.on('mousemove', e => {
   document.getElementById('coords-display').textContent =
     `${e.latlng.lat.toFixed(5)}°N  ${e.latlng.lng.toFixed(5)}°E`;
 });
 
+// ─── VISIBILITY & COLOR ──────────────────────────────────────────
+
+// Returns the first custom class whose length AND width intervals contain this detection.
+function matchCustomClass(d) {
+  return customClasses.find(c =>
+    d.length_m >= c.minLen && d.length_m <= c.maxLen &&
+    d.width_m  >= c.minWidth && d.width_m  <= c.maxWidth
+  ) || null;
+}
+
+// True if the detection passes all active filters (range sliders + class visibility).
+function isVisible(d) {
+  if (d.length_m < lengthFilter.min || d.length_m > lengthFilter.max) return false;
+  if (d.width_m  < widthFilter.min  || d.width_m  > widthFilter.max)  return false;
+  if (classMode === 'default') return !hiddenClasses.has(d.vessel_class);
+  const cc = matchCustomClass(d);
+  return cc !== null && !cc.hidden;
+}
+
+function getVesselColor(d) {
+  if (classMode === 'default') return CLASS_COLORS[d.vessel_class];
+  const cc = matchCustomClass(d);
+  return cc ? cc.color : '#64748b';
+}
+
+function getVesselLabel(d) {
+  if (classMode === 'default') return CLASS_LABELS[d.vessel_class];
+  const cc = matchCustomClass(d);
+  return cc ? cc.name : 'Unclassified';
+}
+
+function getMarkerLayer(d) {
+  if (classMode === 'default') return markerLayers[d.vessel_class];
+  const cc = matchCustomClass(d);
+  return cc ? markerLayers[`cc_${cc.id}`] : null;
+}
+
 // ─── MARKER CREATION ─────────────────────────────────────────────
-function makeIcon(d, size) {
-  const color = CLASS_COLORS[d.vessel_class];
-  return L.circleMarker([d.lat, d.lon], {
-    radius: Math.max(3, size * 0.5 + d.length_m / 60),
-    fillColor: color,
-    fillOpacity: 0.75,
-    color: color,
-    weight: 1,
-    opacity: 0.9
+function makeClusterGroup(color) {
+  return L.markerClusterGroup({
+    maxClusterRadius: 40,
+    disableClusteringAtZoom: 11,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    iconCreateFunction: function(cluster) {
+      const n = cluster.getChildCount();
+      return L.divIcon({
+        html: `<div style="
+          background:${color}22;border:1px solid ${color}88;border-radius:50%;
+          width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+          font-family:'Space Mono',monospace;font-size:0.65rem;font-weight:700;color:${color};
+        ">${n}</div>`,
+        className: '',
+        iconSize: [36, 36]
+      });
+    }
   });
 }
 
+function makeMarkerForDetection(d, i) {
+  const color = getVesselColor(d);
+  const m = L.circleMarker([d.lat, d.lon], {
+    radius: Math.max(3, markerSize * 0.5 + d.length_m / 60),
+    fillColor: color, fillOpacity: 0.75,
+    color: color, weight: 1, opacity: 0.9
+  });
+  m.bindPopup(makePopup(d, i), { maxWidth: 240, className: '' });
+  m.on('click', () => highlightListItem(i));
+  return m;
+}
+
 function makePopup(d, idx) {
-  const cls = CLASS_LABELS[d.vessel_class];
-  const color = CLASS_COLORS[d.vessel_class];
+  const label = getVesselLabel(d);
+  const color = getVesselColor(d);
   return `
     <div>
       <div class="popup-header" style="color:${color}">
-        ⬡ Detection #${idx + 1} &mdash; ${cls}
+        ⬡ Detection #${idx + 1} &mdash; ${label}
       </div>
       <div class="popup-row"><span class="pk">Latitude</span><span class="pv">${d.lat.toFixed(5)}°</span></div>
       <div class="popup-row"><span class="pk">Longitude</span><span class="pv">${d.lon.toFixed(5)}°</span></div>
       <div class="popup-row"><span class="pk">Length</span><span class="pv">${d.length_m} m</span></div>
       <div class="popup-row"><span class="pk">Width</span><span class="pv">${d.width_m} m</span></div>
-      <div class="popup-row"><span class="pk">Class</span><span class="pv" style="color:${color}">${cls.toUpperCase()}</span></div>
+      <div class="popup-row"><span class="pk">Class</span><span class="pv" style="color:${color}">${label.toUpperCase()}</span></div>
     </div>`;
 }
 
 // ─── RENDER MARKERS ──────────────────────────────────────────────
 function buildMarkers() {
-  // Clear existing
   Object.values(markerLayers).forEach(l => map.removeLayer(l));
   markerLayers = {};
-  allMarkers = {};
+  allMarkers   = {};
 
-  // Build cluster groups per class
-  const classes = ['small','medium','large','very_large'];
-  classes.forEach(cls => {
-    markerLayers[cls] = L.markerClusterGroup({
-      maxClusterRadius: 40,
-      disableClusteringAtZoom: 11,
-      spiderfyOnMaxZoom: true,
-      showCoverageOnHover: false,
-      iconCreateFunction: function(cluster) {
-        const n = cluster.getChildCount();
-        const color = CLASS_COLORS[cls];
-        return L.divIcon({
-          html: `<div style="
-            background:${color}22;
-            border:1px solid ${color}88;
-            border-radius:50%;
-            width:36px;height:36px;
-            display:flex;align-items:center;justify-content:center;
-            font-family:'Space Mono',monospace;
-            font-size:0.65rem;font-weight:700;
-            color:${color};
-          ">${n}</div>`,
-          className: '',
-          iconSize: [36, 36]
-        });
-      }
+  if (classMode === 'default') {
+    const classes = ['small', 'medium', 'large', 'very_large'];
+    classes.forEach(cls => { markerLayers[cls] = makeClusterGroup(CLASS_COLORS[cls]); });
+    detections.forEach((d, i) => {
+      if (!isVisible(d)) return;
+      const m = makeMarkerForDetection(d, i);
+      markerLayers[d.vessel_class].addLayer(m);
+      allMarkers[i] = m;
     });
-  });
-
-  detections.forEach((d, i) => {
-    const m = makeIcon(d, markerSize);
-    m.bindPopup(makePopup(d, i), { maxWidth: 240, className: '' });
-    m.on('click', () => highlightListItem(i));
-    markerLayers[d.vessel_class].addLayer(m);
-    allMarkers[i] = m;
-  });
-
-  classes.forEach(cls => {
-    if (!hiddenClasses.has(cls)) {
-      map.addLayer(markerLayers[cls]);
-    }
-  });
+    classes.forEach(cls => {
+      if (!hiddenClasses.has(cls)) map.addLayer(markerLayers[cls]);
+    });
+  } else {
+    customClasses.forEach(cls => { markerLayers[`cc_${cls.id}`] = makeClusterGroup(cls.color); });
+    detections.forEach((d, i) => {
+      if (!isVisible(d)) return;
+      const cc = matchCustomClass(d);
+      if (!cc) return;
+      const m = makeMarkerForDetection(d, i);
+      markerLayers[`cc_${cc.id}`].addLayer(m);
+      allMarkers[i] = m;
+    });
+    customClasses.forEach(cls => {
+      if (!cls.hidden) map.addLayer(markerLayers[`cc_${cls.id}`]);
+    });
+  }
 }
 
-// ─── CLASS TOGGLE ────────────────────────────────────────────────
+// ─── CLASS TOGGLE (DEFAULT MODE) ─────────────────────────────────
 function toggleClass(cls) {
-  if (hiddenClasses.has(cls)) {
-    hiddenClasses.delete(cls);
-    map.addLayer(markerLayers[cls]);
-  } else {
-    hiddenClasses.add(cls);
-    map.removeLayer(markerLayers[cls]);
-  }
+  if (hiddenClasses.has(cls)) hiddenClasses.delete(cls);
+  else hiddenClasses.add(cls);
   document.querySelector(`[data-class="${cls}"]`).classList.toggle('hidden', hiddenClasses.has(cls));
+  buildMarkers();
+  applyListVisibility();
   updateListCount();
 }
 
 function updateListCount() {
-  const shown = detections.filter(d => !hiddenClasses.has(d.vessel_class)).length;
+  const shown = detections.filter(d => isVisible(d)).length;
   document.getElementById('list-count').textContent = `${shown} shown`;
+}
+
+// ─── CUSTOM CLASSES ──────────────────────────────────────────────
+function switchClassMode(mode) {
+  classMode = mode;
+  document.getElementById('default-classes-panel').style.display = mode === 'default' ? 'block' : 'none';
+  document.getElementById('custom-classes-panel').style.display  = mode === 'custom'  ? 'block' : 'none';
+  document.getElementById('tab-default').classList.toggle('active', mode === 'default');
+  document.getElementById('tab-custom').classList.toggle('active',  mode === 'custom');
+  buildMarkers();
+  applyListVisibility();
+  updateListCount();
+}
+
+function addCustomClass() {
+  const name   = document.getElementById('cc-name').value.trim();
+  const minLen = parseFloat(document.getElementById('cc-min-len').value);
+  const maxLen = parseFloat(document.getElementById('cc-max-len').value);
+  const color  = document.getElementById('cc-color').value;
+
+  if (!name || isNaN(minLen) || isNaN(maxLen) || minLen > maxLen) return;
+
+  // Width interval is optional: empty fields mean no width constraint
+  const minWidRaw = document.getElementById('cc-min-wid').value;
+  const maxWidRaw = document.getElementById('cc-max-wid').value;
+  const minWidth = minWidRaw !== '' ? parseFloat(minWidRaw) : 0;
+  const maxWidth = maxWidRaw !== '' ? parseFloat(maxWidRaw) : Infinity;
+
+  customClasses.push({ id: ccIdCounter++, name, minLen, maxLen, minWidth, maxWidth, color, hidden: false });
+
+  document.getElementById('cc-name').value    = '';
+  document.getElementById('cc-min-len').value = '';
+  document.getElementById('cc-max-len').value = '';
+  document.getElementById('cc-min-wid').value = '';
+  document.getElementById('cc-max-wid').value = '';
+
+  renderCustomClasses();
+  buildMarkers();
+  applyListVisibility();
+  updateListCount();
+}
+
+function removeCustomClass(id) {
+  customClasses = customClasses.filter(c => c.id !== id);
+  renderCustomClasses();
+  buildMarkers();
+  applyListVisibility();
+  updateListCount();
+}
+
+function toggleCustomClass(id) {
+  const cls = customClasses.find(c => c.id === id);
+  if (cls) cls.hidden = !cls.hidden;
+  renderCustomClasses();
+  buildMarkers();
+  applyListVisibility();
+  updateListCount();
+}
+
+function renderCustomClasses() {
+  const list = document.getElementById('custom-class-list');
+  list.innerHTML = '';
+  if (customClasses.length === 0) {
+    list.innerHTML = '<div class="cc-empty">No classes defined</div>';
+    return;
+  }
+  customClasses.forEach(cls => {
+    // Build constraint description
+    let rangeStr = `L: ${cls.minLen}–${cls.maxLen} m`;
+    if (cls.maxWidth !== Infinity) {
+      rangeStr += ` · W: ${cls.minWidth}–${cls.maxWidth} m`;
+    }
+    const row = document.createElement('div');
+    row.className = 'custom-class-row' + (cls.hidden ? ' hidden' : '');
+    row.innerHTML = `
+      <div class="class-left" style="flex:1" onclick="toggleCustomClass(${cls.id})">
+        <div class="class-dot" style="background:${cls.color}"></div>
+        <div>
+          <div class="class-name">${cls.name}</div>
+          <div class="class-range">${rangeStr}</div>
+        </div>
+      </div>
+      <button class="cc-del-btn" onclick="event.stopPropagation();removeCustomClass(${cls.id})">✕</button>`;
+    list.appendChild(row);
+  });
+}
+
+// ─── RANGE FILTER SLIDERS ────────────────────────────────────────
+function initRangeSliders(lenMin, lenMax, widMin, widMax) {
+  const lo_len = Math.floor(lenMin), hi_len = Math.ceil(lenMax);
+  const lo_wid = Math.floor(widMin), hi_wid = Math.ceil(widMax);
+
+  const lenMinS = document.getElementById('len-min-slider');
+  const lenMaxS = document.getElementById('len-max-slider');
+  lenMinS.min = lenMaxS.min = lo_len;
+  lenMinS.max = lenMaxS.max = hi_len;
+  lenMinS.value = lo_len;
+  lenMaxS.value = hi_len;
+
+  const widMinS = document.getElementById('wid-min-slider');
+  const widMaxS = document.getElementById('wid-max-slider');
+  widMinS.min = widMaxS.min = lo_wid;
+  widMinS.max = widMaxS.max = hi_wid;
+  widMinS.value = lo_wid;
+  widMaxS.value = hi_wid;
+
+  lengthFilter = { min: lo_len, max: hi_len };
+  widthFilter  = { min: lo_wid, max: hi_wid };
+
+  updateSliderUI('len');
+  updateSliderUI('wid');
+}
+
+function updateSliderUI(prefix) {
+  const minS = document.getElementById(`${prefix}-min-slider`);
+  const maxS = document.getElementById(`${prefix}-max-slider`);
+  const lo = parseInt(minS.value), hi = parseInt(maxS.value);
+  document.getElementById(`${prefix}-min-lbl`).textContent = lo + ' m';
+  document.getElementById(`${prefix}-max-lbl`).textContent = hi + ' m';
+  const gMin = parseInt(minS.min), gMax = parseInt(minS.max);
+  const range = gMax - gMin || 1;
+  const fill = document.getElementById(`${prefix}-fill`);
+  fill.style.left  = ((lo - gMin) / range * 100) + '%';
+  fill.style.width = ((hi - lo)   / range * 100) + '%';
+}
+
+function onLenMinInput() {
+  const minS = document.getElementById('len-min-slider');
+  const maxS = document.getElementById('len-max-slider');
+  if (parseInt(minS.value) > parseInt(maxS.value)) minS.value = maxS.value;
+  updateSliderUI('len');
+  lengthFilter = { min: parseInt(minS.value), max: parseInt(maxS.value) };
+  scheduleFilterUpdate();
+}
+function onLenMaxInput() {
+  const minS = document.getElementById('len-min-slider');
+  const maxS = document.getElementById('len-max-slider');
+  if (parseInt(maxS.value) < parseInt(minS.value)) maxS.value = minS.value;
+  updateSliderUI('len');
+  lengthFilter = { min: parseInt(minS.value), max: parseInt(maxS.value) };
+  scheduleFilterUpdate();
+}
+function onWidMinInput() {
+  const minS = document.getElementById('wid-min-slider');
+  const maxS = document.getElementById('wid-max-slider');
+  if (parseInt(minS.value) > parseInt(maxS.value)) minS.value = maxS.value;
+  updateSliderUI('wid');
+  widthFilter = { min: parseInt(minS.value), max: parseInt(maxS.value) };
+  scheduleFilterUpdate();
+}
+function onWidMaxInput() {
+  const minS = document.getElementById('wid-min-slider');
+  const maxS = document.getElementById('wid-max-slider');
+  if (parseInt(maxS.value) < parseInt(minS.value)) maxS.value = minS.value;
+  updateSliderUI('wid');
+  widthFilter = { min: parseInt(minS.value), max: parseInt(maxS.value) };
+  scheduleFilterUpdate();
+}
+
+function scheduleFilterUpdate() {
+  clearTimeout(_filterTimer);
+  _filterTimer = setTimeout(() => {
+    buildMarkers();
+    applyListVisibility();
+    updateListCount();
+  }, 80);
 }
 
 // ─── MARKER SIZE ─────────────────────────────────────────────────
@@ -774,7 +1219,6 @@ function updateMarkerSize(val) {
 function buildList() {
   const list = document.getElementById('det-list');
   list.innerHTML = '';
-
   detections.forEach((d, i) => {
     const color = CLASS_COLORS[d.vessel_class];
     const div = document.createElement('div');
@@ -790,19 +1234,24 @@ function buildList() {
     div.onclick = () => flyTo(i);
     list.appendChild(div);
   });
+  applyListVisibility();
   updateListCount();
+}
+
+function applyListVisibility() {
+  detections.forEach((d, i) => {
+    const el = document.getElementById(`det-item-${i}`);
+    if (el) el.style.display = isVisible(d) ? '' : 'none';
+  });
 }
 
 function flyTo(idx) {
   const d = detections[idx];
   map.flyTo([d.lat, d.lon], 13, { duration: 0.8 });
   setTimeout(() => {
-    const m = allMarkers[idx];
-    if (m) {
-      if (markerLayers[d.vessel_class]) {
-        markerLayers[d.vessel_class].zoomToShowLayer(m, () => m.openPopup());
-      }
-    }
+    const m     = allMarkers[idx];
+    const layer = getMarkerLayer(d);
+    if (m && layer) layer.zoomToShowLayer(m, () => m.openPopup());
   }, 900);
   highlightListItem(idx);
 }
@@ -830,6 +1279,7 @@ function toggleStats() {
 }
 
 function updateStats(s) {
+  document.getElementById('stat-total').textContent    = s.total_detections;
   document.getElementById('stat-len-min').textContent  = `${s.length_min_m} m`;
   document.getElementById('stat-len-max').textContent  = `${s.length_max_m} m`;
   document.getElementById('stat-len-mean').textContent = `${s.length_mean_m} m`;
@@ -839,9 +1289,16 @@ function updateStats(s) {
     `${s.bbox.lon_min.toFixed(3)}° → ${s.bbox.lon_max.toFixed(3)}°`;
 }
 
-// ─── REPORT SELECTOR ─────────────────────────────────────────────
+// ─── FILTERS PANEL ───────────────────────────────────────────────
+function toggleFilters() {
+  const panel = document.getElementById('filters-panel');
+  const icon  = document.getElementById('filters-icon');
+  const open  = panel.style.display === 'none';
+  panel.style.display = open ? 'block' : 'none';
+  icon.classList.toggle('open', open);
+}
 
-// Triggered by the dropdown — reloads everything with the chosen report.
+// ─── REPORT SELECTOR ─────────────────────────────────────────────
 function loadReport(filename) {
   loadDetections(filename);
 }
@@ -858,7 +1315,7 @@ async function populateReportSelector() {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const files = [...doc.querySelectorAll('a[href]')]
       .map(a => a.getAttribute('href'))
-      .filter(h => h.endsWith('.json') && !h.includes('/'));  // exclude parent dir link
+      .filter(h => h.endsWith('.json') && !h.includes('/'));
     if (files.length === 0) files.push('detections.json');
     files.forEach(f => {
       const opt = document.createElement('option');
@@ -868,13 +1325,98 @@ async function populateReportSelector() {
       sel.appendChild(opt);
     });
   } catch(e) {
-    // Fallback: if directory listing fails, offer only the default report.
     const opt = document.createElement('option');
     opt.value = 'detections.json';
     opt.textContent = 'detections';
     sel.appendChild(opt);
   }
   loadDetections(sel.value);
+}
+
+// ─── RUN PARAMETERS PANEL ────────────────────────────────────────
+function toggleParams() {
+  const panel = document.getElementById('params-panel');
+  const icon  = document.getElementById('params-icon');
+  const open  = panel.style.display === 'none';
+  panel.style.display = open ? 'block' : 'none';
+  icon.classList.toggle('open', open);
+}
+
+function updateRunParams(p) {
+  const fmt = (v, unit) => v !== undefined && v !== null ? `${v} ${unit}` : '—';
+  document.getElementById('param-tw').textContent    = p ? fmt(p.target_window_m,       'm') : '—';
+  document.getElementById('param-gw').textContent    = p ? fmt(p.guard_window_m,        'm') : '—';
+  document.getElementById('param-bw').textContent    = p ? fmt(p.background_window_m,   'm') : '—';
+  document.getElementById('param-pfa').textContent   = p ? fmt(p.pfa,                   '')  : '—';
+  document.getElementById('param-estbg').textContent = p ? (p.estimate_background || '—')    : '—';
+  document.getElementById('param-min').textContent   = p ? fmt(p.min_target_size_m,     'm') : '—';
+  document.getElementById('param-max').textContent   = p ? fmt(p.max_target_size_m,     'm') : '—';
+  document.getElementById('param-shore').textContent = p ? fmt(p.shoreline_extension_m, 'm') : '—';
+}
+
+// ─── COVERAGE OVERLAY ────────────────────────────────────────────
+let coverageLayer = null;
+
+function setupCoverageBtn(coverage) {
+  // Remove any layer from the previous report
+  if (coverageLayer) { map.removeLayer(coverageLayer); coverageLayer = null; }
+
+  const btn   = document.getElementById('coverage-btn');
+  const label = document.getElementById('coverage-label');
+
+  if (!coverage) {
+    btn.disabled = true;
+    btn.textContent = 'Display coverage';
+    label.textContent = '—';
+    return;
+  }
+
+  btn.disabled = false;
+  const isAoi = coverage.type === 'aoi';
+  btn.textContent  = isAoi ? 'Display AOI' : 'Display tile';
+  label.textContent = isAoi ? 'User-defined AOI' : 'Full scene footprint';
+}
+
+function toggleCoverage() {
+  const coverage = DETECTIONS_DATA && DETECTIONS_DATA.coverage;
+  if (!coverage) return;
+
+  const btn = document.getElementById('coverage-btn');
+  const isAoi = coverage.type === 'aoi';
+
+  if (coverageLayer) {
+    map.removeLayer(coverageLayer);
+    coverageLayer = null;
+    btn.textContent = isAoi ? 'Display AOI' : 'Display tile';
+    btn.classList.remove('active');
+    return;
+  }
+
+  const latlngs = parseWktPolygon(coverage.wkt);
+  if (!latlngs) { console.warn('Could not parse coverage WKT'); return; }
+
+  const label = isAoi ? 'AOI' : 'Tile footprint';
+  coverageLayer = L.polygon(latlngs, {
+    color: '#00d4ff',
+    fillColor: '#00d4ff',
+    fillOpacity: 0.06,
+    weight: 1.5,
+    dashArray: '6, 4'
+  }).addTo(map);
+  coverageLayer.bindTooltip(label, { permanent: false, direction: 'center' });
+
+  btn.textContent = isAoi ? 'Hide AOI' : 'Hide tile';
+  btn.classList.add('active');
+}
+
+// Parses "POLYGON ((lon lat, lon lat, ...))" → [[lat,lon], ...]  (Leaflet order)
+function parseWktPolygon(wkt) {
+  const m = wkt.match(/POLYGON\s*\(\(([^)]+)\)/i);
+  if (!m) return null;
+  return m[1].split(',').map(pair => {
+    const parts = pair.trim().split(/\s+/);
+    return [parseFloat(parts[1]), parseFloat(parts[0])];  // lat, lon
+  });
 }
 
 // ─── INIT ────────────────────────────────────────────────────────

@@ -139,11 +139,11 @@
       <sourceProduct refid="Land-Sea-Mask"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <targetWindowSizeInMeter>50</targetWindowSizeInMeter>
-      <guardWindowSizeInMeter>500.0</guardWindowSizeInMeter>
-      <backgroundWindowSizeInMeter>800.0</backgroundWindowSizeInMeter>
-      <pfa>6.5</pfa>
-      <estimateBackground>false</estimateBackground>
+      <targetWindowSizeInMeter>${target_window}</targetWindowSizeInMeter>
+      <guardWindowSizeInMeter>${guard_window}</guardWindowSizeInMeter>
+      <backgroundWindowSizeInMeter>${background_window}</backgroundWindowSizeInMeter>
+      <pfa>${pfa}</pfa>
+      <estimateBackground>${estimate_background}</estimateBackground>
     </parameters>
   </node>
   <node id="Object-Discrimination">
@@ -152,8 +152,8 @@
       <sourceProduct refid="AdaptiveThresholding"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <minTargetSizeInMeter>30.0</minTargetSizeInMeter>
-      <maxTargetSizeInMeter>500.0</maxTargetSizeInMeter>
+      <minTargetSizeInMeter>${min_target_size}</minTargetSizeInMeter>
+      <maxTargetSizeInMeter>${max_target_size}</maxTargetSizeInMeter>
     </parameters>
   </node>
   <node id="Land-Sea-Mask">
@@ -167,7 +167,7 @@
       <useSRTM>true</useSRTM>
       <geometry/>
       <invertGeometry>false</invertGeometry>
-      <shorelineExtension>0</shorelineExtension>
+      <shorelineExtension>${shoreline_extension}</shorelineExtension>
     </parameters>
   </node>
   <node id="Write">
