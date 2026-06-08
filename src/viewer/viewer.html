@@ -115,7 +115,7 @@
   .report-select option { background: var(--panel); color: var(--text); }
 
   /* MAIN LAYOUT */
-  .main { display: flex; flex: 1; overflow: hidden; }
+  .main { display: flex; flex: 1; overflow: hidden; position: relative; }
 
   /* SIDEBAR — flex column: scrollable top + fixed-height detection list */
   .sidebar {
@@ -550,6 +550,84 @@
     background: var(--accent);
   }
 
+  /* RULER */
+  .ruler-btn {
+    display: flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ruler-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .ruler-btn.active { background: rgba(0,212,255,0.15); border-color: var(--accent); color: var(--accent); }
+
+  .ruler-info {
+    position: absolute;
+    bottom: 12px;
+    left: calc(280px + (100% - 280px) / 2);
+    transform: translateX(-50%);
+    background: var(--panel);
+    border: 1px solid rgba(0,212,255,0.45);
+    border-radius: 6px;
+    padding: 7px 14px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    z-index: 500;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.65);
+    white-space: nowrap;
+    pointer-events: auto;
+  }
+  .ruler-lbl { color: var(--text-dim); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .ruler-sep { color: var(--panel-border); }
+  .ruler-pts { color: var(--text-dim); font-size: 0.62rem; }
+  .ruler-clear-btn {
+    background: transparent;
+    border: 1px solid var(--panel-border);
+    border-radius: 3px;
+    color: var(--text-dim);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    padding: 2px 7px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .ruler-clear-btn:hover { border-color: #f87171; color: #f87171; }
+
+  .ruler-seg-label.leaflet-tooltip {
+    background: rgba(10,14,26,0.88) !important;
+    border: 1px solid rgba(0,212,255,0.35) !important;
+    border-radius: 3px !important;
+    color: #00d4ff !important;
+    font-family: 'Space Mono', monospace !important;
+    font-size: 0.6rem !important;
+    padding: 2px 5px !important;
+    box-shadow: none !important;
+  }
+  .ruler-seg-label.leaflet-tooltip::before { display: none !important; }
+
+  /* SCALE BAR */
+  .leaflet-control-scale-line {
+    background: rgba(10,14,26,0.82) !important;
+    border: 1px solid var(--panel-border) !important;
+    border-top: 2px solid var(--accent) !important;
+    color: var(--text-dim) !important;
+    font-family: 'Space Mono', monospace !important;
+    font-size: 0.6rem !important;
+    padding: 2px 5px !important;
+    box-shadow: none !important;
+    white-space: nowrap;
+  }
+  .leaflet-control-scale-line:not(:first-child) { display: none; }
+
   /* Cluster customization */
   .marker-cluster-small div,
   .marker-cluster-medium div,
@@ -728,11 +806,19 @@
           Statistics <span class="stats-toggle-icon" id="stats-icon">▾</span>
         </div>
         <div id="stats-panel" style="display:none; margin-top:8px;">
+          <div class="class-tabs" style="margin-bottom:8px;">
+            <button class="class-tab active" id="stats-tab-all"     onclick="setStatsScope('all')">All</button>
+            <button class="class-tab"        id="stats-tab-visible" onclick="setStatsScope('visible')">Visible</button>
+          </div>
           <div class="stat-row"><span class="stat-key">Total</span><span class="stat-val" id="stat-total">—</span></div>
           <div class="stat-separator">Length</div>
           <div class="stat-row"><span class="stat-key">Min</span><span class="stat-val" id="stat-len-min">—</span></div>
           <div class="stat-row"><span class="stat-key">Max</span><span class="stat-val" id="stat-len-max">—</span></div>
           <div class="stat-row"><span class="stat-key">Mean</span><span class="stat-val" id="stat-len-mean">—</span></div>
+          <div class="stat-separator">Width</div>
+          <div class="stat-row"><span class="stat-key">Min</span><span class="stat-val" id="stat-wid-min">—</span></div>
+          <div class="stat-row"><span class="stat-key">Max</span><span class="stat-val" id="stat-wid-max">—</span></div>
+          <div class="stat-row"><span class="stat-key">Mean</span><span class="stat-val" id="stat-wid-mean">—</span></div>
           <div class="stat-separator">Bounding Box</div>
           <div class="stat-row"><span class="stat-key">Lat</span><span class="stat-val" id="stat-bbox-lat">—</span></div>
           <div class="stat-row"><span class="stat-key">Lon</span><span class="stat-val" id="stat-bbox-lon">—</span></div>
@@ -816,6 +902,15 @@
   </div>
 
   <div id="map"></div>
+
+  <!-- RULER INFO BOX -->
+  <div id="ruler-info" class="ruler-info">
+    <span class="ruler-lbl">Total</span>
+    <span id="ruler-total">—</span>
+    <span class="ruler-sep">|</span>
+    <span id="ruler-pts" class="ruler-pts"></span>
+    <button class="ruler-clear-btn" onclick="clearRuler()">Clear</button>
+  </div>
 </div>
 
 <div class="statusbar">
@@ -872,7 +967,7 @@ async function loadDetections(filename = 'detections.json') {
       Math.min(...widths),  Math.max(...widths)
     );
 
-    updateStats(s);
+    updateStats();
     updateRunParams(DETECTIONS_DATA.parameters || null);
     setupCoverageBtn(DETECTIONS_DATA.coverage   || null);
     buildMarkers();
@@ -1091,6 +1186,7 @@ function toggleClass(cls) {
   buildMarkers();
   applyListVisibility();
   updateListCount();
+  refreshStats();
 }
 
 function updateListCount() {
@@ -1108,6 +1204,7 @@ function switchClassMode(mode) {
   buildMarkers();
   applyListVisibility();
   updateListCount();
+  refreshStats();
 }
 
 function addCustomClass() {
@@ -1136,6 +1233,7 @@ function addCustomClass() {
   buildMarkers();
   applyListVisibility();
   updateListCount();
+  refreshStats();
 }
 
 function removeCustomClass(id) {
@@ -1144,6 +1242,7 @@ function removeCustomClass(id) {
   buildMarkers();
   applyListVisibility();
   updateListCount();
+  refreshStats();
 }
 
 function toggleCustomClass(id) {
@@ -1153,6 +1252,7 @@ function toggleCustomClass(id) {
   buildMarkers();
   applyListVisibility();
   updateListCount();
+  refreshStats();
 }
 
 function renderCustomClasses() {
@@ -1288,6 +1388,7 @@ function scheduleFilterUpdate() {
     buildMarkers();
     applyListVisibility();
     updateListCount();
+    refreshStats();
   }, 80);
 }
 
@@ -1353,6 +1454,8 @@ function highlightListItem(idx) {
 }
 
 // ─── STATS PANEL ─────────────────────────────────────────────────
+let statsScope = 'all';
+
 function toggleStats() {
   const panel = document.getElementById('stats-panel');
   const icon  = document.getElementById('stats-icon');
@@ -1361,16 +1464,46 @@ function toggleStats() {
   icon.classList.toggle('open', open);
 }
 
-function updateStats(s) {
-  document.getElementById('stat-total').textContent    = s.total_detections;
-  document.getElementById('stat-len-min').textContent  = `${s.length_min_m} m`;
-  document.getElementById('stat-len-max').textContent  = `${s.length_max_m} m`;
-  document.getElementById('stat-len-mean').textContent = `${s.length_mean_m} m`;
-  document.getElementById('stat-bbox-lat').textContent =
-    `${s.bbox.lat_min.toFixed(3)}° → ${s.bbox.lat_max.toFixed(3)}°`;
-  document.getElementById('stat-bbox-lon').textContent =
-    `${s.bbox.lon_min.toFixed(3)}° → ${s.bbox.lon_max.toFixed(3)}°`;
+function setStatsScope(scope) {
+  statsScope = scope;
+  document.getElementById('stats-tab-all').classList.toggle('active',     scope === 'all');
+  document.getElementById('stats-tab-visible').classList.toggle('active', scope === 'visible');
+  refreshStats();
 }
+
+function refreshStats() {
+  if (!detections || detections.length === 0) return;
+  const subset = statsScope === 'visible' ? detections.filter(d => isVisible(d)) : detections;
+
+  if (subset.length === 0) {
+    ['stat-total','stat-len-min','stat-len-max','stat-len-mean',
+     'stat-wid-min','stat-wid-max','stat-wid-mean',
+     'stat-bbox-lat','stat-bbox-lon'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+    return;
+  }
+
+  const lengths = subset.map(d => d.length_m);
+  const widths  = subset.map(d => d.width_m);
+  const lats    = subset.map(d => d.lat);
+  const lons    = subset.map(d => d.lon);
+  const mean    = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+
+  document.getElementById('stat-total').textContent    = subset.length;
+  document.getElementById('stat-len-min').textContent  = `${Math.min(...lengths).toFixed(1)} m`;
+  document.getElementById('stat-len-max').textContent  = `${Math.max(...lengths).toFixed(1)} m`;
+  document.getElementById('stat-len-mean').textContent = `${mean(lengths).toFixed(1)} m`;
+  document.getElementById('stat-wid-min').textContent  = `${Math.min(...widths).toFixed(1)} m`;
+  document.getElementById('stat-wid-max').textContent  = `${Math.max(...widths).toFixed(1)} m`;
+  document.getElementById('stat-wid-mean').textContent = `${mean(widths).toFixed(1)} m`;
+  document.getElementById('stat-bbox-lat').textContent =
+    `${Math.min(...lats).toFixed(3)}° → ${Math.max(...lats).toFixed(3)}°`;
+  document.getElementById('stat-bbox-lon').textContent =
+    `${Math.min(...lons).toFixed(3)}° → ${Math.max(...lons).toFixed(3)}°`;
+}
+
+function updateStats() { refreshStats(); }
 
 // ─── DETECTIONS LIST TOGGLE ──────────────────────────────────────
 function toggleDetList() {
@@ -1560,6 +1693,145 @@ function parseWktPolygon(wkt) {
     return [parseFloat(parts[1]), parseFloat(parts[0])];  // lat, lon
   });
 }
+
+// ─── RULER ───────────────────────────────────────────────────────
+let rulerActive    = false;
+let rulerPoints    = [];
+let rulerPoly      = null;
+let rulerGhost     = null;
+let rulerDots      = [];
+let rulerSegLabels = [];
+
+function haversinKm(a, b) {
+  const R  = 6371;
+  const dφ = (b.lat - a.lat) * Math.PI / 180;
+  const dλ = (b.lng - a.lng) * Math.PI / 180;
+  const h  = Math.sin(dφ/2)**2 +
+             Math.cos(a.lat * Math.PI/180) * Math.cos(b.lat * Math.PI/180) * Math.sin(dλ/2)**2;
+  return R * 2 * Math.asin(Math.sqrt(h));
+}
+
+function fmtDist(km) {
+  const nm = km / 1.852;
+  if (km < 0.5) return `${(km * 1000).toFixed(0)} m`;
+  return `${nm.toFixed(2)} NM  (${km.toFixed(2)} km)`;
+}
+
+function fmtDistShort(km) {
+  const nm = km / 1.852;
+  if (km < 0.5) return `${(km * 1000).toFixed(0)} m`;
+  return `${nm.toFixed(2)} NM`;
+}
+
+function rulerTotalKm() {
+  let t = 0;
+  for (let i = 1; i < rulerPoints.length; i++) t += haversinKm(rulerPoints[i-1], rulerPoints[i]);
+  return t;
+}
+
+function updateRulerInfo() {
+  const info = document.getElementById('ruler-info');
+  if (rulerPoints.length < 2) { info.style.display = 'none'; return; }
+  info.style.display = 'flex';
+  document.getElementById('ruler-total').textContent = fmtDist(rulerTotalKm());
+  document.getElementById('ruler-pts').textContent   = `${rulerPoints.length} pts`;
+}
+
+function clearRuler() {
+  if (rulerPoly)  { map.removeLayer(rulerPoly);  rulerPoly  = null; }
+  if (rulerGhost) { map.removeLayer(rulerGhost); rulerGhost = null; }
+  rulerDots.forEach(d => map.removeLayer(d));       rulerDots = [];
+  rulerSegLabels.forEach(l => map.removeLayer(l));  rulerSegLabels = [];
+  rulerPoints = [];
+  document.getElementById('ruler-info').style.display = 'none';
+}
+
+function toggleRuler() {
+  rulerActive = !rulerActive;
+  const btn = document.getElementById('ruler-btn');
+  if (rulerActive) {
+    btn.classList.add('active');
+    map.getContainer().style.cursor = 'crosshair';
+    map.doubleClickZoom.disable();
+  } else {
+    btn.classList.remove('active');
+    map.getContainer().style.cursor = '';
+    map.doubleClickZoom.enable();
+    if (rulerGhost) { map.removeLayer(rulerGhost); rulerGhost = null; }
+  }
+}
+
+map.on('click', function(e) {
+  if (!rulerActive) return;
+
+  const pt = e.latlng;
+  rulerPoints.push(pt);
+
+  const dot = L.circleMarker(pt, {
+    radius: 4, fillColor: '#00d4ff', fillOpacity: 1,
+    color: '#ffffff', weight: 1.5, interactive: false
+  }).addTo(map);
+  rulerDots.push(dot);
+
+  if (rulerPoints.length > 1) {
+    const a = rulerPoints[rulerPoints.length - 2];
+    const mid = L.latLng((a.lat + pt.lat) / 2, (a.lng + pt.lng) / 2);
+    const lbl = L.tooltip({
+      permanent: true, direction: 'top',
+      className: 'ruler-seg-label', interactive: false
+    }).setLatLng(mid).setContent(fmtDistShort(haversinKm(a, pt))).addTo(map);
+    rulerSegLabels.push(lbl);
+
+    if (rulerPoly) map.removeLayer(rulerPoly);
+    rulerPoly = L.polyline(rulerPoints, {
+      color: '#00d4ff', weight: 2, opacity: 0.9,
+      dashArray: '6 5', interactive: false
+    }).addTo(map);
+  }
+
+  updateRulerInfo();
+});
+
+map.on('mousemove', function(e) {
+  if (!rulerActive || rulerPoints.length === 0) return;
+  const pts = [rulerPoints[rulerPoints.length - 1], e.latlng];
+  if (rulerGhost) rulerGhost.setLatLngs(pts);
+  else rulerGhost = L.polyline(pts, {
+    color: '#00d4ff', weight: 1.5, opacity: 0.4,
+    dashArray: '4 5', interactive: false
+  }).addTo(map);
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && rulerActive) {
+    clearRuler();
+    toggleRuler();
+  }
+});
+
+const RulerControl = L.Control.extend({
+  options: { position: 'topright' },
+  onAdd() {
+    const wrap = L.DomUtil.create('div');
+    wrap.style.cssText = 'border:none;background:none;box-shadow:none;';
+    const btn = L.DomUtil.create('button', 'ruler-btn', wrap);
+    btn.id = 'ruler-btn';
+    btn.title = 'Ruler — measure distance (Esc to cancel)';
+    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <line x1="1" y1="14" x2="14" y2="1"/>
+      <line x1="4.5" y1="13.5" x2="4.5" y2="11"/>
+      <line x1="7.5" y1="10.5" x2="7.5" y2="8.5"/>
+      <line x1="10.5" y1="7.5" x2="8.5" y2="7.5"/>
+      <line x1="13.5" y1="4.5" x2="11" y2="4.5"/>
+    </svg>`;
+    L.DomEvent.disableClickPropagation(wrap);
+    L.DomEvent.on(btn, 'click', toggleRuler);
+    return wrap;
+  }
+});
+new RulerControl().addTo(map);
+
+L.control.scale({ position: 'bottomright', imperial: false, maxWidth: 160 }).addTo(map);
 
 // ─── INIT ────────────────────────────────────────────────────────
 initDragHandle();
