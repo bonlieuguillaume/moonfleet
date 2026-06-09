@@ -26,7 +26,7 @@ def run_snap_graph(gpt_path, graph_xml, input_file, output_file,
         estimate_background (str): Locally estimate background statistics — "true"/"false" (default: "false").
         min_target_size (float): Minimum target size in meters to keep (default: 30).
         max_target_size (float): Maximum target size in meters to keep (default: 500).
-        shoreline_extension (int): Land-sea mask shoreline extension in meters (default: 0).
+        shoreline_extension (int): Land-sea mask shoreline extension in pixels (default: 0).
 
     Returns:
         str: The standard output of the process if successful.
@@ -120,7 +120,7 @@ def main():
     parser.add_argument("--estimate-background", default="false", choices=["true", "false"], help="Locally estimate background statistics (default: false)")
     parser.add_argument("--min-target",          type=float, default=30.0,    help="Minimum target size in meters (default: 30)")
     parser.add_argument("--max-target",          type=float, default=500.0,   help="Maximum target size in meters (default: 500)")
-    parser.add_argument("--shoreline-extension", type=int,   default=0,       help="Land-sea mask shoreline extension in meters (default: 0)")
+    parser.add_argument("--shoreline-extension", type=int,   default=0,       help="Land-sea mask shoreline extension in pixels (default: 0)")
 
     args = parser.parse_args()
 

@@ -164,7 +164,7 @@ def main():
                         help="Locally estimate background statistics (default: false)")
     parser.add_argument("--min-target",          type=float, default=30.0,    help="Minimum target size in meters (default: 30)")
     parser.add_argument("--max-target",          type=float, default=500.0,   help="Maximum target size in meters (default: 500)")
-    parser.add_argument("--shoreline-extension", type=int,   default=0,       help="Land-sea mask shoreline extension in meters (default: 0)")
+    parser.add_argument("--shoreline-extension", type=int,   default=0,       help="Land-sea mask shoreline extension in pixels (default: 0)")
 
     args = parser.parse_args()
 
@@ -222,7 +222,7 @@ def main():
         "estimate_background":   args.estimate_background,
         "min_target_size_m":     args.min_target,
         "max_target_size_m":     args.max_target,
-        "shoreline_extension_m": args.shoreline_extension,
+        "shoreline_extension_px": args.shoreline_extension,
     }
 
     # Store the geographic coverage so the viewer can draw it on the map

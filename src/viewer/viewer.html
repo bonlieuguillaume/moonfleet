@@ -1626,7 +1626,7 @@ function updateRunParams(p) {
   document.getElementById('param-estbg').textContent = p ? (p.estimate_background || '—')    : '—';
   document.getElementById('param-min').textContent   = p ? fmt(p.min_target_size_m,     'm') : '—';
   document.getElementById('param-max').textContent   = p ? fmt(p.max_target_size_m,     'm') : '—';
-  document.getElementById('param-shore').textContent = p ? fmt(p.shoreline_extension_m, 'm') : '—';
+  document.getElementById('param-shore').textContent = p ? fmt(p.shoreline_extension_px, 'px') : '—';
 }
 
 // ─── COVERAGE OVERLAY ────────────────────────────────────────────
